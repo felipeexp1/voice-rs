@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const PayloadSchema = z.object({
   provider: z.enum([
@@ -148,4 +149,33 @@ export const testIntegration = createServerFn({ method: "POST" })
     } catch (e) {
       return { ok: false, message: (e as Error).message ?? "Erro desconhecido." };
     }
+  });
+
+export const listIntegrations = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data, error } = await supabase
+      .from("integrations_config")
+      .select("provider, values")
+      .eq("user_id", userId);
+    if (error) throw new Error(error.message);
+    const map: Record<string, Record<string, string>> = {};
+    for (const row of data ?? []) map[row.provider] = (row.values as Record<string, string>) ?? {};
+    return map;
+  });
+
+export const saveIntegration = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => PayloadSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { error } = await supabase
+      .from("integrations_config")
+      .upsert(
+        { user_id: userId, provider: data.provider, values: data.values },
+        { onConflict: "user_id,provider" },
+      );
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
   });
