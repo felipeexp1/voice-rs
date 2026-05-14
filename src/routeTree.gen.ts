@@ -14,6 +14,7 @@ import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppRelatoriosRouteImport } from './routes/_app.relatorios'
 import { Route as AppMonitorRouteImport } from './routes/_app.monitor'
 import { Route as AppLeadsRouteImport } from './routes/_app.leads'
+import { Route as AppConfiguracoesRouteImport } from './routes/_app.configuracoes'
 import { Route as AppCampanhasRouteImport } from './routes/_app.campanhas'
 import { Route as AppAgentesRouteImport } from './routes/_app.agentes'
 
@@ -41,6 +42,11 @@ const AppLeadsRoute = AppLeadsRouteImport.update({
   path: '/leads',
   getParentRoute: () => AppRoute,
 } as any)
+const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppCampanhasRoute = AppCampanhasRouteImport.update({
   id: '/campanhas',
   path: '/campanhas',
@@ -56,6 +62,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/agentes': typeof AppAgentesRoute
   '/campanhas': typeof AppCampanhasRoute
+  '/configuracoes': typeof AppConfiguracoesRoute
   '/leads': typeof AppLeadsRoute
   '/monitor': typeof AppMonitorRoute
   '/relatorios': typeof AppRelatoriosRoute
@@ -63,6 +70,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/agentes': typeof AppAgentesRoute
   '/campanhas': typeof AppCampanhasRoute
+  '/configuracoes': typeof AppConfiguracoesRoute
   '/leads': typeof AppLeadsRoute
   '/monitor': typeof AppMonitorRoute
   '/relatorios': typeof AppRelatoriosRoute
@@ -73,6 +81,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/_app/agentes': typeof AppAgentesRoute
   '/_app/campanhas': typeof AppCampanhasRoute
+  '/_app/configuracoes': typeof AppConfiguracoesRoute
   '/_app/leads': typeof AppLeadsRoute
   '/_app/monitor': typeof AppMonitorRoute
   '/_app/relatorios': typeof AppRelatoriosRoute
@@ -84,16 +93,25 @@ export interface FileRouteTypes {
     | '/'
     | '/agentes'
     | '/campanhas'
+    | '/configuracoes'
     | '/leads'
     | '/monitor'
     | '/relatorios'
   fileRoutesByTo: FileRoutesByTo
-  to: '/agentes' | '/campanhas' | '/leads' | '/monitor' | '/relatorios' | '/'
+  to:
+    | '/agentes'
+    | '/campanhas'
+    | '/configuracoes'
+    | '/leads'
+    | '/monitor'
+    | '/relatorios'
+    | '/'
   id:
     | '__root__'
     | '/_app'
     | '/_app/agentes'
     | '/_app/campanhas'
+    | '/_app/configuracoes'
     | '/_app/leads'
     | '/_app/monitor'
     | '/_app/relatorios'
@@ -141,6 +159,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLeadsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/configuracoes': {
+      id: '/_app/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof AppConfiguracoesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/campanhas': {
       id: '/_app/campanhas'
       path: '/campanhas'
@@ -161,6 +186,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAgentesRoute: typeof AppAgentesRoute
   AppCampanhasRoute: typeof AppCampanhasRoute
+  AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppLeadsRoute: typeof AppLeadsRoute
   AppMonitorRoute: typeof AppMonitorRoute
   AppRelatoriosRoute: typeof AppRelatoriosRoute
@@ -170,6 +196,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAgentesRoute: AppAgentesRoute,
   AppCampanhasRoute: AppCampanhasRoute,
+  AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppLeadsRoute: AppLeadsRoute,
   AppMonitorRoute: AppMonitorRoute,
   AppRelatoriosRoute: AppRelatoriosRoute,
