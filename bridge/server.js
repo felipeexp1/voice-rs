@@ -1,13 +1,16 @@
 /**
- * VoiceRS Media Bridge — Twilio Media Streams ↔ OpenAI Realtime
+ * VoiceRS Media Bridge — Twilio Media Streams ↔ ElevenLabs Conversational AI
  *
- * Deploy em Fly.io grátis (ver bridge/README.md). Uma única instância
- * aguenta ~30 chamadas simultâneas confortavelmente.
+ * Faz a ponte entre o áudio µ-law/8kHz da Twilio e o agente do ElevenLabs
+ * Conv AI (que aceita formatos de telefonia nativamente). Usa o agent_id
+ * configurado pelo usuário e injeta dynamic variables do lead (nome,
+ * numero_processo, polo_ativo, valor_causa, classe_processo) pra que a
+ * Sofia leia cada caso corretamente.
  *
- * Variáveis de ambiente obrigatórias:
- *   OPENAI_API_KEY        - sua chave do platform.openai.com
- *   SUPABASE_URL          - URL do projeto Lovable Cloud
- *   SUPABASE_SERVICE_KEY  - service role key (pra gravar transcrições)
+ * Variáveis de ambiente:
+ *   ELEVENLABS_API_KEY    - obrigatória pra agentes privados (signed URL)
+ *   SUPABASE_URL          - opcional, pra persistir transcrições
+ *   SUPABASE_SERVICE_KEY  - idem
  *   PORT                  - default 8080
  */
 
@@ -16,11 +19,13 @@ import http from "http";
 import { createClient } from "@supabase/supabase-js";
 
 const PORT = process.env.PORT || 8080;
-const OPENAI_KEY = process.env.OPENAI_API_KEY;
+const ELEVEN_KEY = process.env.ELEVENLABS_API_KEY;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
-if (!OPENAI_KEY) { console.error("OPENAI_API_KEY ausente"); process.exit(1); }
+if (!ELEVEN_KEY) {
+  console.warn("[bridge] ELEVENLABS_API_KEY ausente — só vai funcionar com agentes públicos");
+}
 
 const supabase = SUPABASE_URL && SUPABASE_KEY
   ? createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } })
@@ -33,9 +38,26 @@ const server = http.createServer((req, res) => {
 
 const wss = new WebSocketServer({ server, path: "/twilio-media" });
 
+async function getElevenSocketUrl(agentId) {
+  // Tenta signed URL (agentes privados). Se não tiver chave, cai no público.
+  if (!ELEVEN_KEY) {
+    return `wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${encodeURIComponent(agentId)}`;
+  }
+  const r = await fetch(
+    `https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${encodeURIComponent(agentId)}`,
+    { headers: { "xi-api-key": ELEVEN_KEY } },
+  );
+  if (!r.ok) {
+    const txt = await r.text();
+    throw new Error(`signed-url ${r.status}: ${txt.slice(0, 200)}`);
+  }
+  const j = await r.json();
+  return j.signed_url;
+}
+
 wss.on("connection", (twilioWs) => {
   console.log("[bridge] Twilio conectou");
-  let openaiWs = null;
+  let elevenWs = null;
   let streamSid = null;
   let callSid = null;
   let userId = null;
@@ -49,7 +71,13 @@ wss.on("connection", (twilioWs) => {
       .then(({ error }) => error && console.error("[bridge] persist:", error.message));
   }
 
-  twilioWs.on("message", (raw) => {
+  function closeAll() {
+    persist();
+    try { elevenWs?.close(); } catch {}
+    try { twilioWs.close(); } catch {}
+  }
+
+  twilioWs.on("message", async (raw) => {
     let msg; try { msg = JSON.parse(raw.toString()); } catch { return; }
 
     if (msg.event === "start") {
@@ -57,74 +85,111 @@ wss.on("connection", (twilioWs) => {
       const params = msg.start.customParameters || {};
       callSid = params.callSid || msg.start.callSid;
       userId = params.userId;
-      const voice = params.voice || "alloy";
-      const agentPrompt = params.agentPrompt || "Você é um agente de voz educado e prestativo. Responda em português brasileiro de forma natural e concisa.";
+      const agentId = params.agentId;
+      const voiceId = params.voiceId || "";
+      const prompt = params.agentPrompt || "";
+      const firstMessage = params.firstMessage || "";
+      const language = params.language || "pt";
 
-      console.log(`[bridge] start streamSid=${streamSid} callSid=${callSid} voice=${voice}`);
+      if (!agentId) {
+        console.error("[bridge] sem agentId nos custom parameters — encerrando");
+        closeAll();
+        return;
+      }
 
-      // Conecta na OpenAI Realtime
-      openaiWs = new WebSocket(
-        "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17",
-        { headers: { Authorization: `Bearer ${OPENAI_KEY}`, "OpenAI-Beta": "realtime=v1" } },
-      );
+      console.log(`[bridge] start streamSid=${streamSid} callSid=${callSid} agent=${agentId}`);
 
-      openaiWs.on("open", () => {
-        openaiWs.send(JSON.stringify({
-          type: "session.update",
-          session: {
-            modalities: ["audio", "text"],
-            instructions: agentPrompt,
-            voice,
-            input_audio_format: "g711_ulaw",
-            output_audio_format: "g711_ulaw",
-            input_audio_transcription: { model: "whisper-1" },
-            turn_detection: { type: "server_vad", threshold: 0.5, prefix_padding_ms: 300, silence_duration_ms: 600 },
-            temperature: 0.7,
+      // Dynamic variables do lead — qualquer param fora do conjunto reservado vira dyn var
+      const reserved = new Set(["callSid", "userId", "agentId", "voiceId", "agentPrompt", "firstMessage", "language", "voice"]);
+      const dynamic_variables = {};
+      for (const [k, v] of Object.entries(params)) {
+        if (!reserved.has(k) && v) dynamic_variables[k] = v;
+      }
+
+      let url;
+      try { url = await getElevenSocketUrl(agentId); }
+      catch (e) { console.error("[bridge] signed-url falhou:", e.message); closeAll(); return; }
+
+      elevenWs = new WebSocket(url);
+
+      elevenWs.on("open", () => {
+        // Configuração inicial — overrides + formato µ-law/8k pra casar com Twilio
+        const init = {
+          type: "conversation_initiation_client_data",
+          dynamic_variables,
+          conversation_config_override: {
+            agent: {
+              language,
+              ...(prompt ? { prompt: { prompt } } : {}),
+              ...(firstMessage ? { first_message: firstMessage } : {}),
+            },
+            ...(voiceId ? { tts: { voice_id: voiceId } } : {}),
+            conversation: {
+              text_only: false,
+            },
           },
-        }));
-        // Faz a IA falar primeiro
-        openaiWs.send(JSON.stringify({ type: "response.create" }));
+        };
+        elevenWs.send(JSON.stringify(init));
+        console.log("[bridge] init enviado pro ElevenLabs");
       });
 
-      openaiWs.on("message", (data) => {
+      elevenWs.on("message", (data) => {
         let evt; try { evt = JSON.parse(data.toString()); } catch { return; }
-        if (evt.type === "response.audio.delta" && evt.delta) {
-          twilioWs.send(JSON.stringify({
-            event: "media", streamSid, media: { payload: evt.delta },
-          }));
-        } else if (evt.type === "response.audio_transcript.done") {
-          transcript.push({ role: "assistant", text: evt.transcript });
-        } else if (evt.type === "conversation.item.input_audio_transcription.completed") {
-          transcript.push({ role: "user", text: evt.transcript });
-        } else if (evt.type === "error") {
-          console.error("[bridge] OpenAI error:", evt.error);
+
+        switch (evt.type) {
+          case "conversation_initiation_metadata":
+            // ok
+            break;
+          case "ping": {
+            const id = evt.ping_event?.event_id;
+            if (id != null) elevenWs.send(JSON.stringify({ type: "pong", event_id: id }));
+            break;
+          }
+          case "audio": {
+            const b64 = evt.audio_event?.audio_base_64;
+            if (b64 && streamSid) {
+              twilioWs.send(JSON.stringify({
+                event: "media", streamSid, media: { payload: b64 },
+              }));
+            }
+            break;
+          }
+          case "interruption":
+            if (streamSid) twilioWs.send(JSON.stringify({ event: "clear", streamSid }));
+            break;
+          case "user_transcript": {
+            const t = evt.user_transcription_event?.user_transcript;
+            if (t) transcript.push({ role: "user", text: t });
+            break;
+          }
+          case "agent_response": {
+            const t = evt.agent_response_event?.agent_response;
+            if (t) transcript.push({ role: "assistant", text: t });
+            break;
+          }
+          case "agent_response_correction": {
+            const t = evt.agent_response_correction_event?.corrected_agent_response;
+            if (t) transcript.push({ role: "assistant", text: `[corrigido] ${t}` });
+            break;
+          }
         }
       });
 
-      openaiWs.on("close", () => console.log("[bridge] OpenAI fechou"));
-      openaiWs.on("error", (e) => console.error("[bridge] OpenAI WS error:", e.message));
+      elevenWs.on("close", (code) => console.log(`[bridge] ElevenLabs fechou code=${code}`));
+      elevenWs.on("error", (e) => console.error("[bridge] ElevenLabs WS error:", e.message));
     }
 
-    if (msg.event === "media" && openaiWs?.readyState === WebSocket.OPEN) {
-      openaiWs.send(JSON.stringify({
-        type: "input_audio_buffer.append",
-        audio: msg.media.payload,
-      }));
+    if (msg.event === "media" && elevenWs?.readyState === WebSocket.OPEN) {
+      elevenWs.send(JSON.stringify({ user_audio_chunk: msg.media.payload }));
     }
 
     if (msg.event === "stop") {
       console.log("[bridge] Twilio stop");
-      persist();
-      openaiWs?.close();
+      closeAll();
     }
   });
 
-  twilioWs.on("close", () => {
-    console.log("[bridge] Twilio fechou");
-    persist();
-    openaiWs?.close();
-  });
-
+  twilioWs.on("close", () => { console.log("[bridge] Twilio fechou"); closeAll(); });
   twilioWs.on("error", (e) => console.error("[bridge] Twilio WS error:", e.message));
 });
 

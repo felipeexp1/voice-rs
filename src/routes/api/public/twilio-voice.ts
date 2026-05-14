@@ -92,7 +92,7 @@ async function handle(request: Request): Promise<Response> {
   const streamUrl = `${wsUrl.replace(/\/$/, "")}/twilio-media`;
 
   // Busca dados do lead, se foi passado, para injetar no contexto da IA
-  let leadContext = "";
+  let leadVars: Record<string, string> = {};
   if (leadId) {
     const { data: lead } = await supabaseAdmin
       .from("leads")
@@ -101,15 +101,17 @@ async function handle(request: Request): Promise<Response> {
       .eq("user_id", userId)
       .maybeSingle();
     if (lead) {
-      const linhas = [
-        `Nome: ${lead.nome}`,
-        `Telefone: ${lead.telefone}`,
-        lead.numero_processo ? `Número do processo: ${lead.numero_processo}` : null,
-        lead.polo_ativo ? `Polo ativo: ${lead.polo_ativo}` : null,
-        lead.valor_causa != null ? `Valor da causa: R$ ${Number(lead.valor_causa).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : null,
-        lead.classe_processo ? `Classe do processo: ${lead.classe_processo}` : null,
-      ].filter(Boolean).join("\n");
-      leadContext = `\n\nDados do lead/processo desta ligação:\n${linhas}\n\nUse essas informações naturalmente durante a conversa quando fizer sentido.`;
+      leadVars = {
+        nome: lead.nome ?? "",
+        telefone: lead.telefone ?? "",
+        numero_processo: lead.numero_processo ?? "",
+        polo_ativo: lead.polo_ativo ?? "",
+        valor_causa:
+          lead.valor_causa != null
+            ? `R$ ${Number(lead.valor_causa).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
+            : "",
+        classe_processo: lead.classe_processo ?? "",
+      };
     }
   }
 
@@ -133,14 +135,26 @@ async function handle(request: Request): Promise<Response> {
     }
   }
 
-  // Parâmetros customizados pro bridge — ele usa pra configurar a sessão OpenAI
-  const params = [
+  // Parâmetros customizados pro bridge → ElevenLabs Conversational AI
+  const agentId = agent.elevenlabs_agent_id || "";
+  if (!agentId) {
+    return twimlError(
+      "Agente ElevenLabs não configurado. Vá em Configurações → Agente de voz e cole o Agent ID.",
+    );
+  }
+  const language = (agent.language || "pt-BR").split("-")[0]; // ElevenLabs usa "pt", "en", "es"
+  const params: Array<{ name: string; value: string }> = [
     { name: "userId", value: userId },
     { name: "callSid", value: callSid },
-    { name: "voice", value: agent.voice || "alloy" },
-    { name: "language", value: agent.language || "pt-BR" },
-    { name: "agentPrompt", value: ((agent.agent_prompt || "Você é um agente de voz educado e prestativo. Responda em português brasileiro de forma natural e concisa.") + leadContext).slice(0, 4000) },
+    { name: "agentId", value: agentId },
+    { name: "language", value: language },
+    ...(agent.voice ? [{ name: "voiceId", value: agent.voice }] : []),
+    ...(agent.agent_prompt ? [{ name: "agentPrompt", value: agent.agent_prompt.slice(0, 4000) }] : []),
     ...(leadId ? [{ name: "leadId", value: leadId }] : []),
+    // Dynamic variables do lead (lidas pelo bridge e injetadas no agente)
+    ...Object.entries(leadVars)
+      .filter(([, v]) => v)
+      .map(([name, value]) => ({ name, value })),
   ];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
