@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { testIntegration } from "@/lib/integrations.functions";
+import { testIntegration, listIntegrations, saveIntegration } from "@/lib/integrations.functions";
 import { Topbar } from "@/components/voicers/Topbar";
 import { Button } from "@/components/ui/button";
 import {
@@ -99,29 +101,48 @@ function StatusPill({ status }: { status: Status }) {
 }
 
 function IntegrationCard({
-  icon: Icon, name, category, description, status, required, children, provider,
+  icon: Icon, name, category, description, status, required, children, provider, defaults,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   name: string; category: string; description: string;
   status: Status; required?: boolean;
   children: React.ReactNode;
   provider?: "twilio" | "vono" | "bridge" | "openai" | "elevenlabs" | "deepgram" | "whatsapp" | "webhook";
+  defaults?: Record<string, string>;
 }) {
   const [open, setOpen] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [saving, setSaving] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const runTest = useServerFn(testIntegration);
+  const runSave = useServerFn(saveIntegration);
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    if (!open || !defaults) return;
+    const form = formRef.current;
+    if (!form) return;
+    for (const [k, v] of Object.entries(defaults)) {
+      const el = form.elements.namedItem(k) as (HTMLInputElement | HTMLSelectElement | null);
+      if (el && !el.value) el.value = v;
+    }
+  }, [open, defaults]);
+
+  function gatherValues(): Record<string, string> {
+    const form = formRef.current;
+    if (!form) return {};
+    const fd = new FormData(form);
+    const values: Record<string, string> = {};
+    fd.forEach((v, k) => { if (typeof v === "string") values[k] = v; });
+    return values;
+  }
 
   async function handleTest() {
     if (!provider) {
       toast.info("Esta integração ainda não tem teste automatizado.");
       return;
     }
-    const form = formRef.current;
-    if (!form) return;
-    const fd = new FormData(form);
-    const values: Record<string, string> = {};
-    fd.forEach((v, k) => { if (typeof v === "string") values[k] = v; });
+    const values = gatherValues();
     setTesting(true);
     const t = toast.loading(`Testando ${name}…`);
     try {
@@ -137,6 +158,24 @@ function IntegrationCard({
       toast.error(`${name}: ${(e as Error).message}`);
     } finally {
       setTesting(false);
+    }
+  }
+
+  async function handleSave() {
+    if (!provider) {
+      toast.info("Esta integração não pode ser salva.");
+      return;
+    }
+    const values = gatherValues();
+    setSaving(true);
+    try {
+      await runSave({ data: { provider, values } });
+      toast.success(`${name}: configurações salvas.`);
+      qc.invalidateQueries({ queryKey: ["integrations"] });
+    } catch (e) {
+      toast.error(`${name}: ${(e as Error).message}`);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -163,7 +202,9 @@ function IntegrationCard({
             <Button type="button" variant="outline" size="sm" onClick={handleTest} disabled={testing}>
               {testing ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Testando…</> : "Testar conexão"}
             </Button>
-            <Button type="button" size="sm" onClick={() => toast.success(`${name}: configurações salvas localmente.`)}>Salvar</Button>
+            <Button type="button" size="sm" onClick={handleSave} disabled={saving}>
+              {saving ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Salvando…</> : "Salvar"}
+            </Button>
           </div>
         </form>
       )}
