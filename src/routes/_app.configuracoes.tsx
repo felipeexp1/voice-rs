@@ -222,6 +222,12 @@ function CategoryHeader({ title, hint }: { title: string; hint?: string }) {
 }
 
 function Integracoes() {
+  const fetchAll = useServerFn(listIntegrations);
+  const { data: stored } = useQuery({
+    queryKey: ["integrations"],
+    queryFn: () => fetchAll(),
+  });
+  const d = (p: string) => stored?.[p] ?? {};
   return (
     <div>
       <a
@@ -245,7 +251,7 @@ function Integracoes() {
 
       <CategoryHeader title="Telefonia" hint="ao menos um provedor é necessário" />
       <div className="space-y-3">
-        <IntegrationCard icon={Phone} name="Twilio" category="Voz outbound" required status="pending" provider="twilio"
+        <IntegrationCard icon={Phone} name="Twilio" category="Voz outbound" required status={Object.keys(d("twilio")).length ? "connected" : "pending"} provider="twilio" defaults={d("twilio")}
           description="Provedor primário para originar chamadas e receber callbacks de status.">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Account SID"><Secret name="accountSid" placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxx" /></Field>
@@ -255,7 +261,7 @@ function Integracoes() {
           </div>
         </IntegrationCard>
 
-        <IntegrationCard icon={Phone} name="Vono" category="Voz outbound (BR)" status="optional" provider="vono"
+        <IntegrationCard icon={Phone} name="Vono" category="Voz outbound (BR)" status={Object.keys(d("vono")).length ? "connected" : "optional"} provider="vono" defaults={d("vono")}
           description="Provedor alternativo nacional, usado em fallback ou custos menores em DDDs específicos.">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="API Key"><Secret name="apiKey" placeholder="••••••••••••••••" /></Field>
@@ -263,7 +269,7 @@ function Integracoes() {
           </div>
         </IntegrationCard>
 
-        <IntegrationCard icon={Server} name="Bridge de mídia" category="Streaming RTP ↔ WebSocket" required status="pending" provider="bridge"
+        <IntegrationCard icon={Server} name="Bridge de mídia" category="Streaming RTP ↔ WebSocket" required status={Object.keys(d("bridge")).length ? "connected" : "pending"} provider="bridge" defaults={d("bridge")}
           description="Microserviço Node.js que faz a ponte entre o áudio da operadora e a IA em tempo real.">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Bridge URL"><Input name="url" placeholder="wss://bridge.voicers.app" /></Field>
@@ -274,7 +280,7 @@ function Integracoes() {
 
       <CategoryHeader title="Inteligência conversacional" />
       <div className="space-y-3">
-        <IntegrationCard icon={Brain} name="OpenAI" category="LLM — raciocínio" required status="pending" provider="openai"
+        <IntegrationCard icon={Brain} name="OpenAI" category="LLM — raciocínio" required status={Object.keys(d("openai")).length ? "connected" : "pending"} provider="openai" defaults={d("openai")}
           description="Modelo principal que entende o lead, qualifica e decide próximas ações.">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="API Key"><Secret name="apiKey" placeholder="sk-..." /></Field>
@@ -292,7 +298,7 @@ function Integracoes() {
           </div>
         </IntegrationCard>
 
-        <IntegrationCard icon={Mic} name="ElevenLabs" category="TTS — síntese de voz" required status="pending" provider="elevenlabs"
+        <IntegrationCard icon={Mic} name="ElevenLabs" category="TTS — síntese de voz" required status={Object.keys(d("elevenlabs")).length ? "connected" : "pending"} provider="elevenlabs" defaults={d("elevenlabs")}
           description="Gera as vozes ultra-realistas dos agentes em pt-BR com baixa latência.">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="API Key global" hint="sobrepõe a do agente se preenchida"><Secret name="apiKey" placeholder="••••••••••••••••" /></Field>
@@ -306,7 +312,7 @@ function Integracoes() {
           </div>
         </IntegrationCard>
 
-        <IntegrationCard icon={Headphones} name="Deepgram" category="STT — transcrição em tempo real" required status="pending" provider="deepgram"
+        <IntegrationCard icon={Headphones} name="Deepgram" category="STT — transcrição em tempo real" required status={Object.keys(d("deepgram")).length ? "connected" : "pending"} provider="deepgram" defaults={d("deepgram")}
           description="Transcreve a fala do lead em streaming para o LLM responder em <500ms.">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="API Key"><Secret name="apiKey" placeholder="••••••••••••••••" /></Field>
@@ -323,7 +329,7 @@ function Integracoes() {
 
       <CategoryHeader title="Mensageria & follow-up" />
       <div className="space-y-3">
-        <IntegrationCard icon={MessageSquare} name="WhatsApp Business (Meta)" category="Disparo pós-qualificação" status="pending" provider="whatsapp"
+        <IntegrationCard icon={MessageSquare} name="WhatsApp Business (Meta)" category="Disparo pós-qualificação" status={Object.keys(d("whatsapp")).length ? "connected" : "pending"} provider="whatsapp" defaults={d("whatsapp")}
           description="Envia template aprovado automaticamente quando o lead é qualificado.">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Token Meta API"><Secret name="token" placeholder="EAAxxxxxxxxxxx" /></Field>
@@ -351,7 +357,7 @@ function Integracoes() {
           <p className="text-xs text-muted-foreground">Para gerenciar tabelas e RLS, abra o painel do Cloud.</p>
         </IntegrationCard>
 
-        <IntegrationCard icon={Webhook} name="CRM externo" category="Webhook outbound" status="optional" provider="webhook"
+        <IntegrationCard icon={Webhook} name="CRM externo" category="Webhook outbound" status={Object.keys(d("webhook")).length ? "connected" : "optional"} provider="webhook" defaults={d("webhook")}
           description="Envia eventos (lead qualificado, chamada concluída, agendamento) para seu CRM.">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Endpoint"><Input name="endpoint" placeholder="https://crm.empresa.com/hooks/voicers" /></Field>
