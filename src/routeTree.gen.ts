@@ -17,6 +17,7 @@ import { Route as AppRelatoriosRouteImport } from './routes/_app.relatorios'
 import { Route as AppMonitorRouteImport } from './routes/_app.monitor'
 import { Route as AppLeadsRouteImport } from './routes/_app.leads'
 import { Route as AppConfiguracoesRouteImport } from './routes/_app.configuracoes'
+import { Route as AppChamadasRouteImport } from './routes/_app.chamadas'
 import { Route as AppCampanhasRouteImport } from './routes/_app.campanhas'
 import { Route as AppAgentesRouteImport } from './routes/_app.agentes'
 import { Route as ApiPublicTwilioVoiceRouteImport } from './routes/api/public/twilio-voice'
@@ -61,6 +62,11 @@ const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
   path: '/configuracoes',
   getParentRoute: () => AppRoute,
 } as any)
+const AppChamadasRoute = AppChamadasRouteImport.update({
+  id: '/chamadas',
+  path: '/chamadas',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppCampanhasRoute = AppCampanhasRouteImport.update({
   id: '/campanhas',
   path: '/campanhas',
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/agentes': typeof AppAgentesRoute
   '/campanhas': typeof AppCampanhasRoute
+  '/chamadas': typeof AppChamadasRoute
   '/configuracoes': typeof AppConfiguracoesRoute
   '/leads': typeof AppLeadsRoute
   '/monitor': typeof AppMonitorRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/agentes': typeof AppAgentesRoute
   '/campanhas': typeof AppCampanhasRoute
+  '/chamadas': typeof AppChamadasRoute
   '/configuracoes': typeof AppConfiguracoesRoute
   '/leads': typeof AppLeadsRoute
   '/monitor': typeof AppMonitorRoute
@@ -114,6 +122,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_app/agentes': typeof AppAgentesRoute
   '/_app/campanhas': typeof AppCampanhasRoute
+  '/_app/chamadas': typeof AppChamadasRoute
   '/_app/configuracoes': typeof AppConfiguracoesRoute
   '/_app/leads': typeof AppLeadsRoute
   '/_app/monitor': typeof AppMonitorRoute
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/agentes'
     | '/campanhas'
+    | '/chamadas'
     | '/configuracoes'
     | '/leads'
     | '/monitor'
@@ -142,6 +152,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/agentes'
     | '/campanhas'
+    | '/chamadas'
     | '/configuracoes'
     | '/leads'
     | '/monitor'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/_app/agentes'
     | '/_app/campanhas'
+    | '/_app/chamadas'
     | '/_app/configuracoes'
     | '/_app/leads'
     | '/_app/monitor'
@@ -231,6 +243,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConfiguracoesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/chamadas': {
+      id: '/_app/chamadas'
+      path: '/chamadas'
+      fullPath: '/chamadas'
+      preLoaderRoute: typeof AppChamadasRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/campanhas': {
       id: '/_app/campanhas'
       path: '/campanhas'
@@ -265,6 +284,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAgentesRoute: typeof AppAgentesRoute
   AppCampanhasRoute: typeof AppCampanhasRoute
+  AppChamadasRoute: typeof AppChamadasRoute
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppLeadsRoute: typeof AppLeadsRoute
   AppMonitorRoute: typeof AppMonitorRoute
@@ -276,6 +296,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAgentesRoute: AppAgentesRoute,
   AppCampanhasRoute: AppCampanhasRoute,
+  AppChamadasRoute: AppChamadasRoute,
   AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppLeadsRoute: AppLeadsRoute,
   AppMonitorRoute: AppMonitorRoute,
@@ -295,3 +316,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
