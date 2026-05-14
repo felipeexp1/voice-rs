@@ -16,16 +16,19 @@ async function handle(request: Request): Promise<Response> {
   const callStatus = String(form.get("CallStatus") ?? "");
   const duration = form.get("CallDuration");
   const recordingUrl = form.get("RecordingUrl");
+  const answeredBy = form.get("AnsweredBy");
 
   if (!callSid) return new Response("ok", { status: 200 });
 
   const update: {
-    status: string;
+    status?: string;
     started_at?: string;
     ended_at?: string;
     duration_seconds?: number;
     recording_url?: string;
-  } = { status: callStatus };
+    answered_by?: string;
+  } = {};
+  if (callStatus) update.status = callStatus;
   if (callStatus === "in-progress" || callStatus === "answered") {
     update.started_at = new Date().toISOString();
   }
@@ -34,6 +37,9 @@ async function handle(request: Request): Promise<Response> {
     if (duration) update.duration_seconds = Number(duration);
   }
   if (recordingUrl) update.recording_url = String(recordingUrl);
+  if (answeredBy) update.answered_by = String(answeredBy);
+
+  if (Object.keys(update).length === 0) return new Response("ok", { status: 200 });
 
   await supabaseAdmin.from("calls").update(update).eq("twilio_call_sid", callSid);
 

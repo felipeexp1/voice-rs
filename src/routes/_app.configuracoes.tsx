@@ -258,6 +258,25 @@ function Integracoes() {
             <Field label="Auth Token"><Secret name="authToken" placeholder="••••••••••••••••" /></Field>
             <Field label="Número de origem" hint="formato E.164"><Input name="from" placeholder="+5511404000000" /></Field>
             <Field label="Webhook de status"><Input name="webhook" placeholder="https://voicers.app/api/public/twilio" /></Field>
+            <Field label="Caller ID (Vono)" hint="opcional — sobrescreve 'From' nas saídas">
+              <Input name="callerIdOverride" placeholder="+551140000000 (seu número Vono)" />
+            </Field>
+            <Field label="Detecção de secretária (AMD)" hint="economiza minutos de IA">
+              <select name="amdEnabled" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">
+                <option value="true">Ativada (recomendado)</option>
+                <option value="false">Desativada</option>
+              </select>
+            </Field>
+          </div>
+          <div className="rounded-xl border border-cyan/30 bg-cyan/5 p-4 text-sm">
+            <p className="mb-2 font-medium text-cyan">📞 Usando número Vono via SIP Trunk?</p>
+            <ol className="ml-4 list-decimal space-y-1.5 text-xs text-muted-foreground">
+              <li>No Twilio Console → <b>Elastic SIP Trunking → Trunks → Create</b>. Em <b>Termination URI</b>, registre o domínio (ex: <code className="rounded bg-background px-1">voicers.pstn.twilio.com</code>) e <b>autentique por IP ACL</b> liberando os IPs SIP da Vono.</li>
+              <li>Em <b>Origination</b> do mesmo trunk, adicione um SIP URI apontando pra Vono (ex: <code className="rounded bg-background px-1">sip:&lt;trunk-id&gt;@sip.vono.com.br;edge=sao-paulo</code>) com prioridade 10.</li>
+              <li>Na Vono, no painel do trunk, configure o <b>destino SIP</b> apontando pro seu Twilio Termination URI e use as credenciais (ou o IP ACL que você liberou).</li>
+              <li>Volte aqui e preencha <b>Caller ID (Vono)</b> com o número BR que vai aparecer pro lead. O Twilio precisa também tê-lo registrado como <b>Verified Caller ID</b> (Console → Phone Numbers → Verified Caller IDs).</li>
+              <li>Pronto: o outbound usa Twilio (TwiML + Stream) mas o áudio sai pelo trunk Vono — telecom ~70% mais barato.</li>
+            </ol>
           </div>
         </IntegrationCard>
 

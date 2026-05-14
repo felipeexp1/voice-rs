@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       calls: {
         Row: {
+          answered_by: string | null
           created_at: string
           direction: string
           duration_seconds: number | null
@@ -32,6 +33,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          answered_by?: string | null
           created_at?: string
           direction: string
           duration_seconds?: number | null
@@ -48,6 +50,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          answered_by?: string | null
           created_at?: string
           direction?: string
           duration_seconds?: number | null
