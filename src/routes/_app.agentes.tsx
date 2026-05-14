@@ -3,8 +3,8 @@ import { Topbar } from "@/components/voicers/Topbar";
 import { AgentAvatar } from "@/components/voicers/AgentAvatar";
 import { Waveform } from "@/components/voicers/Waveform";
 import { Button } from "@/components/ui/button";
-import { Plus, Play, Pencil, Power, Phone, Cpu, Thermometer } from "lucide-react";
-import { agents } from "@/data/mock";
+import { Play, Pencil, Power, Phone, Cpu, Thermometer } from "lucide-react";
+import { agents as allAgents } from "@/data/mock";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -15,6 +15,8 @@ export const Route = createFileRoute("/_app/agentes")({
 
 function Agentes() {
   const navigate = useNavigate();
+  // Mostra apenas a Sofia. Quando quisermos suportar mais agentes, removemos esse filtro.
+  const agents = allAgents.filter((a) => a.name === "Sofia");
   const [activeMap, setActiveMap] = useState<Record<string, boolean>>(
     () => Object.fromEntries(agents.map((a) => [a.id, true])),
   );
@@ -34,11 +36,6 @@ function Agentes() {
       <Topbar
         title="Agentes de voz"
         subtitle={`${Object.values(activeMap).filter(Boolean).length} ativos · ${agents.length} no total`}
-        actions={
-          <Button className="gap-1.5" onClick={goEdit}>
-            <Plus className="h-4 w-4" /> Novo agente
-          </Button>
-        }
       />
       <div className="grid grid-cols-1 gap-4 p-8 md:grid-cols-2 xl:grid-cols-3">
         {agents.map((a) => {
