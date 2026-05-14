@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { getRequest } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const E164 = /^\+[1-9]\d{6,14}$/;
@@ -50,14 +51,11 @@ export const startOutboundCall = createServerFn({ method: "POST" })
       );
     }
 
-    // 2. URL do TwiML pra esta conta
-    const projectId = process.env.SUPABASE_PROJECT_ID ?? process.env.VITE_SUPABASE_PROJECT_ID;
+    // 2. URL do TwiML pra esta conta — derivamos do host do request atual
+    const req = getRequest();
+    const reqUrl = new URL(req.url);
     const baseUrl =
-      process.env.PUBLIC_APP_URL ||
-      (projectId ? `https://project--${projectId}.lovable.app` : "");
-    if (!baseUrl) {
-      throw new Error("URL pública do app não detectada. Defina o secret PUBLIC_APP_URL.");
-    }
+      process.env.PUBLIC_APP_URL || `${reqUrl.protocol}//${reqUrl.host}`;
     const twimlUrl = `${baseUrl}/api/public/twilio-voice?u=${userId}`;
     const statusUrl = `${baseUrl}/api/public/twilio-status?u=${userId}`;
 
