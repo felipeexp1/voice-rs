@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_app/agentes")({
 function Agentes() {
   const navigate = useNavigate();
   const [activeMap, setActiveMap] = useState<Record<string, boolean>>(
-    () => Object.fromEntries(agents.map((a) => [a.id, a.isActive])),
+    () => Object.fromEntries(agents.map((a) => [a.id, true])),
   );
 
   const goTest = () => navigate({ to: "/testar-agente" });
