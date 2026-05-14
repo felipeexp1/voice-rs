@@ -62,8 +62,15 @@ export const startOutboundCall = createServerFn({ method: "POST" })
     // 2. URL do TwiML pra esta conta — derivamos do host do request atual
     const req = getRequest();
     const reqUrl = new URL(req.url);
+    const isLocal =
+      reqUrl.hostname === "localhost" ||
+      reqUrl.hostname === "127.0.0.1" ||
+      reqUrl.hostname.endsWith(".local");
     const baseUrl =
-      process.env.PUBLIC_APP_URL || `${reqUrl.protocol}//${reqUrl.host}`;
+      process.env.PUBLIC_APP_URL ||
+      (isLocal
+        ? "https://voice-rs.lovable.app"
+        : `${reqUrl.protocol}//${reqUrl.host}`);
     const twimlUrl = `${baseUrl}/api/public/twilio-voice?u=${userId}`;
     const statusUrl = `${baseUrl}/api/public/twilio-status?u=${userId}`;
 
