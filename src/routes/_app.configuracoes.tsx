@@ -105,7 +105,7 @@ function IntegrationCard({
   name: string; category: string; description: string;
   status: Status; required?: boolean;
   children: React.ReactNode;
-  provider?: Parameters<typeof testIntegration>[0] extends { data: { provider: infer P } } ? P : string;
+  provider?: "twilio" | "vono" | "bridge" | "openai" | "elevenlabs" | "deepgram" | "whatsapp" | "webhook";
 }) {
   const [open, setOpen] = useState(false);
   const [testing, setTesting] = useState(false);
