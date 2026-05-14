@@ -4,16 +4,15 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { activeCalls } from "@/data/mock";
 
-type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; badge?: number; exact?: boolean };
-const items: NavItem[] = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { to: "/campanhas", label: "Campanhas", icon: Megaphone },
-  { to: "/agentes", label: "Agentes", icon: Bot },
-  { to: "/leads", label: "Leads", icon: Users },
-  { to: "/monitor", label: "Monitor", icon: Headphones, badge: activeCalls.length },
-  { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
-  { to: "/configuracoes", label: "Configurações", icon: Settings },
-];
+const items = [
+  { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true as boolean, badge: undefined as number | undefined },
+  { to: "/campanhas", label: "Campanhas", icon: Megaphone, exact: false, badge: undefined as number | undefined },
+  { to: "/agentes", label: "Agentes", icon: Bot, exact: false, badge: undefined as number | undefined },
+  { to: "/leads", label: "Leads", icon: Users, exact: false, badge: undefined as number | undefined },
+  { to: "/monitor", label: "Monitor", icon: Headphones, exact: false, badge: activeCalls.length as number | undefined },
+  { to: "/relatorios", label: "Relatórios", icon: BarChart3, exact: false, badge: undefined as number | undefined },
+  { to: "/configuracoes", label: "Configurações", icon: Settings, exact: false, badge: undefined as number | undefined },
+] as const;
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
