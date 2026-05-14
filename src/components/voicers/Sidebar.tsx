@@ -1,8 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Megaphone, Bot, Users, Headphones, BarChart3, Settings, Mic2, ChevronLeft } from "lucide-react";
+import { LayoutDashboard, Megaphone, Bot, Users, Headphones, BarChart3, Settings, ChevronLeft } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { activeCalls } from "@/data/mock";
+import logoRS from "@/assets/logo-rocha-silva.png";
 
 const items = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true as boolean, badge: undefined as number | undefined },
@@ -26,12 +27,10 @@ export function Sidebar() {
       )}
     >
       <div className="flex items-center gap-2.5 px-4 py-5">
-        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground glow-amber">
-          <Mic2 className="h-5 w-5" strokeWidth={2.5} />
-        </div>
+        <img src={logoRS} alt="Rocha & Silva" className="h-10 w-10 shrink-0 rounded-xl object-contain" />
         {!collapsed && (
           <div className="flex flex-col leading-tight">
-            <span className="font-display text-lg font-bold tracking-tight">VoiceRS</span>
+            <span className="font-display text-lg font-bold tracking-tight">Rocha &amp; Silva</span>
             <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Call Center IA</span>
           </div>
         )}
