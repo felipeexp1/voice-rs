@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { testIntegration } from "@/lib/integrations.functions";
+import { testIntegration, listIntegrations, saveIntegration } from "@/lib/integrations.functions";
 import { Topbar } from "@/components/voicers/Topbar";
 import { Button } from "@/components/ui/button";
 import {
@@ -99,29 +101,48 @@ function StatusPill({ status }: { status: Status }) {
 }
 
 function IntegrationCard({
-  icon: Icon, name, category, description, status, required, children, provider,
+  icon: Icon, name, category, description, status, required, children, provider, defaults,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   name: string; category: string; description: string;
   status: Status; required?: boolean;
   children: React.ReactNode;
   provider?: "twilio" | "vono" | "bridge" | "openai" | "elevenlabs" | "deepgram" | "whatsapp" | "webhook";
+  defaults?: Record<string, string>;
 }) {
   const [open, setOpen] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [saving, setSaving] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const runTest = useServerFn(testIntegration);
+  const runSave = useServerFn(saveIntegration);
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    if (!open || !defaults) return;
+    const form = formRef.current;
+    if (!form) return;
+    for (const [k, v] of Object.entries(defaults)) {
+      const el = form.elements.namedItem(k) as (HTMLInputElement | HTMLSelectElement | null);
+      if (el && !el.value) el.value = v;
+    }
+  }, [open, defaults]);
+
+  function gatherValues(): Record<string, string> {
+    const form = formRef.current;
+    if (!form) return {};
+    const fd = new FormData(form);
+    const values: Record<string, string> = {};
+    fd.forEach((v, k) => { if (typeof v === "string") values[k] = v; });
+    return values;
+  }
 
   async function handleTest() {
     if (!provider) {
       toast.info("Esta integração ainda não tem teste automatizado.");
       return;
     }
-    const form = formRef.current;
-    if (!form) return;
-    const fd = new FormData(form);
-    const values: Record<string, string> = {};
-    fd.forEach((v, k) => { if (typeof v === "string") values[k] = v; });
+    const values = gatherValues();
     setTesting(true);
     const t = toast.loading(`Testando ${name}…`);
     try {
@@ -137,6 +158,24 @@ function IntegrationCard({
       toast.error(`${name}: ${(e as Error).message}`);
     } finally {
       setTesting(false);
+    }
+  }
+
+  async function handleSave() {
+    if (!provider) {
+      toast.info("Esta integração não pode ser salva.");
+      return;
+    }
+    const values = gatherValues();
+    setSaving(true);
+    try {
+      await runSave({ data: { provider, values } });
+      toast.success(`${name}: configurações salvas.`);
+      qc.invalidateQueries({ queryKey: ["integrations"] });
+    } catch (e) {
+      toast.error(`${name}: ${(e as Error).message}`);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -163,7 +202,9 @@ function IntegrationCard({
             <Button type="button" variant="outline" size="sm" onClick={handleTest} disabled={testing}>
               {testing ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Testando…</> : "Testar conexão"}
             </Button>
-            <Button type="button" size="sm" onClick={() => toast.success(`${name}: configurações salvas localmente.`)}>Salvar</Button>
+            <Button type="button" size="sm" onClick={handleSave} disabled={saving}>
+              {saving ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Salvando…</> : "Salvar"}
+            </Button>
           </div>
         </form>
       )}
@@ -181,6 +222,12 @@ function CategoryHeader({ title, hint }: { title: string; hint?: string }) {
 }
 
 function Integracoes() {
+  const fetchAll = useServerFn(listIntegrations);
+  const { data: stored } = useQuery({
+    queryKey: ["integrations"],
+    queryFn: () => fetchAll(),
+  });
+  const d = (p: string) => stored?.[p] ?? {};
   return (
     <div>
       <a
@@ -204,7 +251,7 @@ function Integracoes() {
 
       <CategoryHeader title="Telefonia" hint="ao menos um provedor é necessário" />
       <div className="space-y-3">
-        <IntegrationCard icon={Phone} name="Twilio" category="Voz outbound" required status="pending" provider="twilio"
+        <IntegrationCard icon={Phone} name="Twilio" category="Voz outbound" required status={Object.keys(d("twilio")).length ? "connected" : "pending"} provider="twilio" defaults={d("twilio")}
           description="Provedor primário para originar chamadas e receber callbacks de status.">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Account SID"><Secret name="accountSid" placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxx" /></Field>
@@ -214,7 +261,7 @@ function Integracoes() {
           </div>
         </IntegrationCard>
 
-        <IntegrationCard icon={Phone} name="Vono" category="Voz outbound (BR)" status="optional" provider="vono"
+        <IntegrationCard icon={Phone} name="Vono" category="Voz outbound (BR)" status={Object.keys(d("vono")).length ? "connected" : "optional"} provider="vono" defaults={d("vono")}
           description="Provedor alternativo nacional, usado em fallback ou custos menores em DDDs específicos.">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="API Key"><Secret name="apiKey" placeholder="••••••••••••••••" /></Field>
@@ -222,7 +269,7 @@ function Integracoes() {
           </div>
         </IntegrationCard>
 
-        <IntegrationCard icon={Server} name="Bridge de mídia" category="Streaming RTP ↔ WebSocket" required status="pending" provider="bridge"
+        <IntegrationCard icon={Server} name="Bridge de mídia" category="Streaming RTP ↔ WebSocket" required status={Object.keys(d("bridge")).length ? "connected" : "pending"} provider="bridge" defaults={d("bridge")}
           description="Microserviço Node.js que faz a ponte entre o áudio da operadora e a IA em tempo real.">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Bridge URL"><Input name="url" placeholder="wss://bridge.voicers.app" /></Field>
@@ -233,7 +280,7 @@ function Integracoes() {
 
       <CategoryHeader title="Inteligência conversacional" />
       <div className="space-y-3">
-        <IntegrationCard icon={Brain} name="OpenAI" category="LLM — raciocínio" required status="pending" provider="openai"
+        <IntegrationCard icon={Brain} name="OpenAI" category="LLM — raciocínio" required status={Object.keys(d("openai")).length ? "connected" : "pending"} provider="openai" defaults={d("openai")}
           description="Modelo principal que entende o lead, qualifica e decide próximas ações.">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="API Key"><Secret name="apiKey" placeholder="sk-..." /></Field>
@@ -251,7 +298,7 @@ function Integracoes() {
           </div>
         </IntegrationCard>
 
-        <IntegrationCard icon={Mic} name="ElevenLabs" category="TTS — síntese de voz" required status="pending" provider="elevenlabs"
+        <IntegrationCard icon={Mic} name="ElevenLabs" category="TTS — síntese de voz" required status={Object.keys(d("elevenlabs")).length ? "connected" : "pending"} provider="elevenlabs" defaults={d("elevenlabs")}
           description="Gera as vozes ultra-realistas dos agentes em pt-BR com baixa latência.">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="API Key global" hint="sobrepõe a do agente se preenchida"><Secret name="apiKey" placeholder="••••••••••••••••" /></Field>
@@ -265,7 +312,7 @@ function Integracoes() {
           </div>
         </IntegrationCard>
 
-        <IntegrationCard icon={Headphones} name="Deepgram" category="STT — transcrição em tempo real" required status="pending" provider="deepgram"
+        <IntegrationCard icon={Headphones} name="Deepgram" category="STT — transcrição em tempo real" required status={Object.keys(d("deepgram")).length ? "connected" : "pending"} provider="deepgram" defaults={d("deepgram")}
           description="Transcreve a fala do lead em streaming para o LLM responder em <500ms.">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="API Key"><Secret name="apiKey" placeholder="••••••••••••••••" /></Field>
@@ -282,7 +329,7 @@ function Integracoes() {
 
       <CategoryHeader title="Mensageria & follow-up" />
       <div className="space-y-3">
-        <IntegrationCard icon={MessageSquare} name="WhatsApp Business (Meta)" category="Disparo pós-qualificação" status="pending" provider="whatsapp"
+        <IntegrationCard icon={MessageSquare} name="WhatsApp Business (Meta)" category="Disparo pós-qualificação" status={Object.keys(d("whatsapp")).length ? "connected" : "pending"} provider="whatsapp" defaults={d("whatsapp")}
           description="Envia template aprovado automaticamente quando o lead é qualificado.">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Token Meta API"><Secret name="token" placeholder="EAAxxxxxxxxxxx" /></Field>
@@ -310,7 +357,7 @@ function Integracoes() {
           <p className="text-xs text-muted-foreground">Para gerenciar tabelas e RLS, abra o painel do Cloud.</p>
         </IntegrationCard>
 
-        <IntegrationCard icon={Webhook} name="CRM externo" category="Webhook outbound" status="optional" provider="webhook"
+        <IntegrationCard icon={Webhook} name="CRM externo" category="Webhook outbound" status={Object.keys(d("webhook")).length ? "connected" : "optional"} provider="webhook" defaults={d("webhook")}
           description="Envia eventos (lead qualificado, chamada concluída, agendamento) para seu CRM.">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Endpoint"><Input name="endpoint" placeholder="https://crm.empresa.com/hooks/voicers" /></Field>
