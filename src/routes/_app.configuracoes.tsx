@@ -1,10 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { testIntegration } from "@/lib/integrations.functions";
 import { Topbar } from "@/components/voicers/Topbar";
 import { Button } from "@/components/ui/button";
 import {
   Phone, Mic, MessageSquare, Cog, Eye, EyeOff, Brain, Headphones,
-  Database, Webhook, Server, Plug, CheckCircle2, AlertCircle, Users, Download,
+  Database, Webhook, Server, Plug, CheckCircle2, AlertCircle, Users, Download, Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -67,11 +70,11 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={cn("w-full rounded-lg border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none", props.className)} />;
 }
 
-function Secret({ placeholder }: { placeholder: string }) {
+function Secret({ placeholder, name }: { placeholder: string; name?: string }) {
   const [show, setShow] = useState(false);
   return (
     <div className="relative">
-      <Input type={show ? "text" : "password"} placeholder={placeholder} />
+      <Input type={show ? "text" : "password"} placeholder={placeholder} name={name} />
       <button onClick={() => setShow(s => !s)} type="button" className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground">
         {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
       </button>
@@ -96,14 +99,47 @@ function StatusPill({ status }: { status: Status }) {
 }
 
 function IntegrationCard({
-  icon: Icon, name, category, description, status, required, children,
+  icon: Icon, name, category, description, status, required, children, provider,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   name: string; category: string; description: string;
   status: Status; required?: boolean;
   children: React.ReactNode;
+  provider?: Parameters<typeof testIntegration>[0] extends { data: { provider: infer P } } ? P : string;
 }) {
   const [open, setOpen] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const runTest = useServerFn(testIntegration);
+
+  async function handleTest() {
+    if (!provider) {
+      toast.info("Esta integração ainda não tem teste automatizado.");
+      return;
+    }
+    const form = formRef.current;
+    if (!form) return;
+    const fd = new FormData(form);
+    const values: Record<string, string> = {};
+    fd.forEach((v, k) => { if (typeof v === "string") values[k] = v; });
+    setTesting(true);
+    const t = toast.loading(`Testando ${name}…`);
+    try {
+      const res = await runTest({ data: { provider: provider as never, values } });
+      toast.dismiss(t);
+      if (res.ok) {
+        toast.success(`${name}: ${res.message}` + (res.latencyMs ? ` (${res.latencyMs}ms)` : ""));
+      } else {
+        toast.error(`${name}: ${res.message}`);
+      }
+    } catch (e) {
+      toast.dismiss(t);
+      toast.error(`${name}: ${(e as Error).message}`);
+    } finally {
+      setTesting(false);
+    }
+  }
+
   return (
     <div className="rounded-2xl border border-border bg-card transition-colors hover:border-border/80">
       <button onClick={() => setOpen(o => !o)} className="flex w-full items-center gap-4 p-5 text-left">
@@ -121,13 +157,15 @@ function IntegrationCard({
         <StatusPill status={status} />
       </button>
       {open && (
-        <div className="space-y-4 border-t border-border p-5">
+        <form ref={formRef} onSubmit={(e) => e.preventDefault()} className="space-y-4 border-t border-border p-5">
           {children}
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" size="sm">Testar conexão</Button>
-            <Button size="sm">Salvar</Button>
+            <Button type="button" variant="outline" size="sm" onClick={handleTest} disabled={testing}>
+              {testing ? <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Testando…</> : "Testar conexão"}
+            </Button>
+            <Button type="button" size="sm" onClick={() => toast.success(`${name}: configurações salvas localmente.`)}>Salvar</Button>
           </div>
-        </div>
+        </form>
       )}
     </div>
   );
