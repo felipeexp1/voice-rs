@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      calls: {
+        Row: {
+          created_at: string
+          direction: string
+          duration_seconds: number | null
+          ended_at: string | null
+          from_number: string
+          id: string
+          recording_url: string | null
+          started_at: string | null
+          status: string
+          to_number: string
+          transcript: Json
+          twilio_call_sid: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          direction: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          from_number: string
+          id?: string
+          recording_url?: string | null
+          started_at?: string | null
+          status?: string
+          to_number: string
+          transcript?: Json
+          twilio_call_sid?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          direction?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          from_number?: string
+          id?: string
+          recording_url?: string | null
+          started_at?: string | null
+          status?: string
+          to_number?: string
+          transcript?: Json
+          twilio_call_sid?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       integrations_config: {
         Row: {
           created_at: string
