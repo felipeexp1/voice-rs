@@ -58,9 +58,15 @@ async function testBridge(v: Record<string, string>): Promise<TestResult> {
   const miss = need(v, ["url"]);
   if (miss) return { ok: false, message: miss };
   const httpUrl = v.url.replace(/^wss:\/\//, "https://").replace(/^ws:\/\//, "http://");
+  let origin: string;
+  try {
+    origin = new URL(httpUrl).origin;
+  } catch {
+    return { ok: false, message: "URL da Bridge inválida (use wss://host ou https://host)." };
+  }
   try {
     const { result, ms } = await timed(() =>
-      fetch(`${httpUrl.replace(/\/$/, "")}/health`, {
+      fetch(`${origin}/health`, {
         headers: v.secret ? { Authorization: `Bearer ${v.secret}` } : {},
       }),
     );
