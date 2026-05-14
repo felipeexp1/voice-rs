@@ -33,6 +33,7 @@ function twimlError(message: string): Response {
 async function handle(request: Request): Promise<Response> {
   const url = new URL(request.url);
   let userId = url.searchParams.get("u") ?? "";
+  const leadId = url.searchParams.get("l") ?? "";
 
   // Para inbound, Twilio manda os campos do POST como form-encoded.
   // Pegamos To (= seu número Twilio) e From (= número do cliente que ligou).
@@ -90,6 +91,28 @@ async function handle(request: Request): Promise<Response> {
   const wsUrl = bridge.url.startsWith("ws") ? bridge.url : `wss://${bridge.url.replace(/^https?:\/\//, "")}`;
   const streamUrl = `${wsUrl.replace(/\/$/, "")}/twilio-media`;
 
+  // Busca dados do lead, se foi passado, para injetar no contexto da IA
+  let leadContext = "";
+  if (leadId) {
+    const { data: lead } = await supabaseAdmin
+      .from("leads")
+      .select("nome, telefone, numero_processo, polo_ativo, valor_causa, classe_processo")
+      .eq("id", leadId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (lead) {
+      const linhas = [
+        `Nome: ${lead.nome}`,
+        `Telefone: ${lead.telefone}`,
+        lead.numero_processo ? `Número do processo: ${lead.numero_processo}` : null,
+        lead.polo_ativo ? `Polo ativo: ${lead.polo_ativo}` : null,
+        lead.valor_causa != null ? `Valor da causa: R$ ${Number(lead.valor_causa).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : null,
+        lead.classe_processo ? `Classe do processo: ${lead.classe_processo}` : null,
+      ].filter(Boolean).join("\n");
+      leadContext = `\n\nDados do lead/processo desta ligação:\n${linhas}\n\nUse essas informações naturalmente durante a conversa quando fizer sentido.`;
+    }
+  }
+
   // Registra chamada inbound se ainda não existe
   if (request.method === "POST" && callSid && fromNumber && toNumber) {
     const { data: existing } = await supabaseAdmin
@@ -116,7 +139,8 @@ async function handle(request: Request): Promise<Response> {
     { name: "callSid", value: callSid },
     { name: "voice", value: agent.voice || "alloy" },
     { name: "language", value: agent.language || "pt-BR" },
-    { name: "agentPrompt", value: (agent.agent_prompt || "Você é um agente de voz educado e prestativo. Responda em português brasileiro de forma natural e concisa.").slice(0, 2000) },
+    { name: "agentPrompt", value: ((agent.agent_prompt || "Você é um agente de voz educado e prestativo. Responda em português brasileiro de forma natural e concisa.") + leadContext).slice(0, 4000) },
+    ...(leadId ? [{ name: "leadId", value: leadId }] : []),
   ];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>

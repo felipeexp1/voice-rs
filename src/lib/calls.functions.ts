@@ -30,6 +30,7 @@ export const startOutboundCall = createServerFn({ method: "POST" })
           .string()
           .regex(E164)
           .optional(),
+        leadId: z.string().uuid().optional(),
       })
       .parse(input),
   )
@@ -71,7 +72,7 @@ export const startOutboundCall = createServerFn({ method: "POST" })
       (isLocal
         ? "https://voice-rs.lovable.app"
         : `${reqUrl.protocol}//${reqUrl.host}`);
-    const twimlUrl = `${baseUrl}/api/public/twilio-voice?u=${userId}`;
+    const twimlUrl = `${baseUrl}/api/public/twilio-voice?u=${userId}${data.leadId ? `&l=${data.leadId}` : ""}`;
     const statusUrl = `${baseUrl}/api/public/twilio-status?u=${userId}`;
 
     // 3. Cria registro pendente na tabela calls
