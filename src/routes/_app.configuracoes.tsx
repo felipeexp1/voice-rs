@@ -455,3 +455,103 @@ function Equipe() {
     </div>
   );
 }
+
+function VoiceAgentFields({ defaults }: { defaults: Record<string, string> }) {
+  const fetchVoices = useServerFn(listElevenLabsVoices);
+  const promptRef = useRef<HTMLTextAreaElement>(null);
+
+  const { data: voicesRes, isLoading: loadingVoices } = useQuery({
+    queryKey: ["elevenlabs-voices"],
+    queryFn: () => fetchVoices(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const voices = voicesRes?.ok ? voicesRes.voices : [];
+  const voicesError = voicesRes && !voicesRes.ok ? voicesRes.error : null;
+
+  const loadSofia = () => {
+    if (promptRef.current) {
+      promptRef.current.value = SOFIA_PROMPT;
+      toast.success("Prompt da Sofia carregado. Clique em Salvar.");
+    }
+  };
+
+  return (
+    <div className="grid grid-cols-1 gap-4">
+      <Field
+        label="Prompt do agente"
+        hint="usado como system prompt; suporte a {{nome}}, {{numero_processo}}, {{polo_ativo}}, {{valor_causa}}, {{classe_processo}}"
+      >
+        <textarea
+          ref={promptRef}
+          name="agent_prompt"
+          rows={8}
+          defaultValue={defaults.agent_prompt ?? ""}
+          placeholder="Você é a Sofia, assistente de triagem da R&S..."
+          className="w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-xs leading-relaxed placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+        />
+        <div className="mt-2 flex justify-end">
+          <Button type="button" variant="outline" size="sm" onClick={loadSofia}>
+            Carregar prompt da Sofia
+          </Button>
+        </div>
+      </Field>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field
+          label="ElevenLabs Agent ID"
+          hint="criado em elevenlabs.io → Conversational AI"
+        >
+          <Input
+            name="elevenlabs_agent_id"
+            placeholder="agent_xxxxxxxxxxxxxxxxxxxx"
+            defaultValue={defaults.elevenlabs_agent_id ?? ""}
+          />
+        </Field>
+        <Field label="Voz (da sua conta ElevenLabs)">
+          <select
+            name="voice"
+            defaultValue={defaults.voice ?? ""}
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+          >
+            <option value="">
+              {loadingVoices ? "Carregando vozes…" : "— escolher voz —"}
+            </option>
+            {voices.map((v) => (
+              <option key={v.id} value={v.id}>
+                {v.name}
+                {v.gender ? ` · ${v.gender}` : ""}
+                {v.language ? ` · ${v.language}` : ""}
+              </option>
+            ))}
+          </select>
+          {voicesError && (
+            <p className="mt-1 text-xs text-destructive">{voicesError}</p>
+          )}
+        </Field>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field label="Idioma">
+          <select
+            name="language"
+            defaultValue={defaults.language ?? "pt-BR"}
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+          >
+            <option value="pt-BR">Português (Brasil)</option>
+            <option value="en-US">English (US)</option>
+            <option value="es-ES">Español</option>
+          </select>
+        </Field>
+      </div>
+
+      <p className="rounded-lg border border-cyan/20 bg-cyan/5 p-3 text-xs text-muted-foreground">
+        💡 No painel do ElevenLabs, configure a Sofia com o prompt acima, escolha a
+        voz e habilite as variáveis dinâmicas (<code>nome</code>,{" "}
+        <code>numero_processo</code>, <code>polo_ativo</code>,{" "}
+        <code>valor_causa</code>, <code>classe_processo</code>) pra que a IA leia
+        cada lead corretamente.
+      </p>
+    </div>
+  );
+}
