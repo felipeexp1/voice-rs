@@ -19,7 +19,13 @@ async function handle(request: Request): Promise<Response> {
 
   if (!callSid) return new Response("ok", { status: 200 });
 
-  const update: Record<string, unknown> = { status: callStatus };
+  const update: {
+    status: string;
+    started_at?: string;
+    ended_at?: string;
+    duration_seconds?: number;
+    recording_url?: string;
+  } = { status: callStatus };
   if (callStatus === "in-progress" || callStatus === "answered") {
     update.started_at = new Date().toISOString();
   }

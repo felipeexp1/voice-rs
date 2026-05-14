@@ -146,7 +146,10 @@ export const testIntegration = createServerFn({ method: "POST" })
         case "deepgram": return await testDeepgram(data.values);
         case "whatsapp": return await testWhatsApp(data.values);
         case "webhook": return await testWebhook(data.values);
+        case "voice_agent":
+          return { ok: true, message: "Configurações do agente salvas." };
       }
+      return { ok: false, message: "Provider não suportado." };
     } catch (e) {
       return { ok: false, message: (e as Error).message ?? "Erro desconhecido." };
     }
