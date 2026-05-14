@@ -5,6 +5,8 @@ import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { testIntegration, listIntegrations, saveIntegration } from "@/lib/integrations.functions";
+import { listElevenLabsVoices } from "@/lib/elevenlabs.functions";
+import { SOFIA_PROMPT } from "@/lib/sofia-prompt";
 import { Topbar } from "@/components/voicers/Topbar";
 import { Button } from "@/components/ui/button";
 import {
@@ -310,37 +312,7 @@ function Integracoes() {
 
         <IntegrationCard icon={Bot} name="Agente de voz" category="Prompt + voz da IA" required status={Object.keys(d("voice_agent")).length ? "connected" : "pending"} provider="voice_agent" defaults={d("voice_agent")}
           description="Define a personalidade, o prompt do sistema e a voz que o cliente escuta na ligação.">
-          <div className="grid grid-cols-1 gap-4">
-            <Field label="Prompt do agente" hint="usado como system prompt no OpenAI Realtime">
-              <textarea
-                name="agent_prompt"
-                rows={5}
-                placeholder="Você é a Sofia, atendente da Rocha & Silva. Seja educada, fale em português brasileiro de forma natural e concisa. Confirme o nome do cliente e pergunte como pode ajudar..."
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-              />
-            </Field>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label="Voz">
-                <select name="voice" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">
-                  <option value="alloy">alloy (neutra)</option>
-                  <option value="echo">echo (masculina suave)</option>
-                  <option value="shimmer">shimmer (feminina clara)</option>
-                  <option value="nova">nova (feminina jovem)</option>
-                  <option value="ballad">ballad (feminina expressiva)</option>
-                  <option value="coral">coral (feminina calma)</option>
-                  <option value="sage">sage (masculina maduro)</option>
-                  <option value="verse">verse (masculina expressiva)</option>
-                </select>
-              </Field>
-              <Field label="Idioma">
-                <select name="language" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">
-                  <option value="pt-BR">Português (Brasil)</option>
-                  <option value="en-US">English (US)</option>
-                  <option value="es-ES">Español</option>
-                </select>
-              </Field>
-            </div>
-          </div>
+          <VoiceAgentFields defaults={d("voice_agent")} />
         </IntegrationCard>
       </div>
 
@@ -480,6 +452,106 @@ function Equipe() {
       <div className="rounded-xl border border-dashed border-border bg-background/50 p-8 text-center text-sm text-muted-foreground">
         Conecte o Lovable Cloud Auth para começar a convidar usuários.
       </div>
+    </div>
+  );
+}
+
+function VoiceAgentFields({ defaults }: { defaults: Record<string, string> }) {
+  const fetchVoices = useServerFn(listElevenLabsVoices);
+  const promptRef = useRef<HTMLTextAreaElement>(null);
+
+  const { data: voicesRes, isLoading: loadingVoices } = useQuery({
+    queryKey: ["elevenlabs-voices"],
+    queryFn: () => fetchVoices(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const voices = voicesRes?.ok ? voicesRes.voices : [];
+  const voicesError = voicesRes && !voicesRes.ok ? voicesRes.error : null;
+
+  const loadSofia = () => {
+    if (promptRef.current) {
+      promptRef.current.value = SOFIA_PROMPT;
+      toast.success("Prompt da Sofia carregado. Clique em Salvar.");
+    }
+  };
+
+  return (
+    <div className="grid grid-cols-1 gap-4">
+      <Field
+        label="Prompt do agente"
+        hint="usado como system prompt; suporte a {{nome}}, {{numero_processo}}, {{polo_ativo}}, {{valor_causa}}, {{classe_processo}}"
+      >
+        <textarea
+          ref={promptRef}
+          name="agent_prompt"
+          rows={8}
+          defaultValue={defaults.agent_prompt ?? ""}
+          placeholder="Você é a Sofia, assistente de triagem da R&S..."
+          className="w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-xs leading-relaxed placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+        />
+        <div className="mt-2 flex justify-end">
+          <Button type="button" variant="outline" size="sm" onClick={loadSofia}>
+            Carregar prompt da Sofia
+          </Button>
+        </div>
+      </Field>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field
+          label="ElevenLabs Agent ID"
+          hint="criado em elevenlabs.io → Conversational AI"
+        >
+          <Input
+            name="elevenlabs_agent_id"
+            placeholder="agent_xxxxxxxxxxxxxxxxxxxx"
+            defaultValue={defaults.elevenlabs_agent_id ?? ""}
+          />
+        </Field>
+        <Field label="Voz (da sua conta ElevenLabs)">
+          <select
+            name="voice"
+            defaultValue={defaults.voice ?? ""}
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+          >
+            <option value="">
+              {loadingVoices ? "Carregando vozes…" : "— escolher voz —"}
+            </option>
+            {voices.map((v) => (
+              <option key={v.id} value={v.id}>
+                {v.name}
+                {v.gender ? ` · ${v.gender}` : ""}
+                {v.language ? ` · ${v.language}` : ""}
+              </option>
+            ))}
+          </select>
+          {voicesError && (
+            <p className="mt-1 text-xs text-destructive">{voicesError}</p>
+          )}
+        </Field>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field label="Idioma">
+          <select
+            name="language"
+            defaultValue={defaults.language ?? "pt-BR"}
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+          >
+            <option value="pt-BR">Português (Brasil)</option>
+            <option value="en-US">English (US)</option>
+            <option value="es-ES">Español</option>
+          </select>
+        </Field>
+      </div>
+
+      <p className="rounded-lg border border-cyan/20 bg-cyan/5 p-3 text-xs text-muted-foreground">
+        💡 No painel do ElevenLabs, configure a Sofia com o prompt acima, escolha a
+        voz e habilite as variáveis dinâmicas (<code>nome</code>,{" "}
+        <code>numero_processo</code>, <code>polo_ativo</code>,{" "}
+        <code>valor_causa</code>, <code>classe_processo</code>) pra que a IA leia
+        cada lead corretamente.
+      </p>
     </div>
   );
 }
