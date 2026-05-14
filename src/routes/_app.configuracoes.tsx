@@ -5,6 +5,8 @@ import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { testIntegration, listIntegrations, saveIntegration } from "@/lib/integrations.functions";
+import { listElevenLabsVoices } from "@/lib/elevenlabs.functions";
+import { SOFIA_PROMPT } from "@/lib/sofia-prompt";
 import { Topbar } from "@/components/voicers/Topbar";
 import { Button } from "@/components/ui/button";
 import {
@@ -310,37 +312,7 @@ function Integracoes() {
 
         <IntegrationCard icon={Bot} name="Agente de voz" category="Prompt + voz da IA" required status={Object.keys(d("voice_agent")).length ? "connected" : "pending"} provider="voice_agent" defaults={d("voice_agent")}
           description="Define a personalidade, o prompt do sistema e a voz que o cliente escuta na ligação.">
-          <div className="grid grid-cols-1 gap-4">
-            <Field label="Prompt do agente" hint="usado como system prompt no OpenAI Realtime">
-              <textarea
-                name="agent_prompt"
-                rows={5}
-                placeholder="Você é a Sofia, atendente da Rocha & Silva. Seja educada, fale em português brasileiro de forma natural e concisa. Confirme o nome do cliente e pergunte como pode ajudar..."
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-              />
-            </Field>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label="Voz">
-                <select name="voice" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">
-                  <option value="alloy">alloy (neutra)</option>
-                  <option value="echo">echo (masculina suave)</option>
-                  <option value="shimmer">shimmer (feminina clara)</option>
-                  <option value="nova">nova (feminina jovem)</option>
-                  <option value="ballad">ballad (feminina expressiva)</option>
-                  <option value="coral">coral (feminina calma)</option>
-                  <option value="sage">sage (masculina maduro)</option>
-                  <option value="verse">verse (masculina expressiva)</option>
-                </select>
-              </Field>
-              <Field label="Idioma">
-                <select name="language" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">
-                  <option value="pt-BR">Português (Brasil)</option>
-                  <option value="en-US">English (US)</option>
-                  <option value="es-ES">Español</option>
-                </select>
-              </Field>
-            </div>
-          </div>
+          <VoiceAgentFields defaults={d("voice_agent")} />
         </IntegrationCard>
       </div>
 
