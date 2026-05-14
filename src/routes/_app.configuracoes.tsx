@@ -108,6 +108,7 @@ function IntegrationCard({
   status: Status; required?: boolean;
   children: React.ReactNode;
   provider?: "twilio" | "vono" | "bridge" | "openai" | "elevenlabs" | "deepgram" | "whatsapp" | "webhook";
+    | "voice_agent";
   defaults?: Record<string, string>;
 }) {
   const [open, setOpen] = useState(false);
