@@ -26,6 +26,10 @@ export const startOutboundCall = createServerFn({ method: "POST" })
     z
       .object({
         to: z.string().regex(E164, "Número destino inválido (use formato E.164, ex: +5511999999999)"),
+        callerId: z
+          .string()
+          .regex(E164)
+          .optional(),
       })
       .parse(input),
   )
@@ -51,6 +55,10 @@ export const startOutboundCall = createServerFn({ method: "POST" })
       );
     }
 
+    // Caller ID: prioridade → param da chamada > callerIdOverride salvo (Vono) > from Twilio
+    const fromNumber = data.callerId || twilio.callerIdOverride || twilio.from;
+    const amdEnabled = twilio.amdEnabled !== "false"; // default ON
+
     // 2. URL do TwiML pra esta conta — derivamos do host do request atual
     const req = getRequest();
     const reqUrl = new URL(req.url);
@@ -65,7 +73,7 @@ export const startOutboundCall = createServerFn({ method: "POST" })
       .insert({
         user_id: userId,
         direction: "outbound",
-        from_number: twilio.from,
+        from_number: fromNumber,
         to_number: data.to,
         status: "initiated",
       })
@@ -75,14 +83,22 @@ export const startOutboundCall = createServerFn({ method: "POST" })
 
     // 4. Chama Twilio REST
     const auth = "Basic " + Buffer.from(`${twilio.accountSid}:${twilio.authToken}`).toString("base64");
-    const body = new URLSearchParams({
+    const params: Record<string, string> = {
       To: data.to,
-      From: twilio.from,
+      From: fromNumber,
       Url: twimlUrl,
       StatusCallback: statusUrl,
       StatusCallbackEvent: "initiated ringing answered completed",
       StatusCallbackMethod: "POST",
-    });
+    };
+    if (amdEnabled) {
+      // Detecção assíncrona de secretária eletrônica — Twilio entrega resultado via StatusCallback
+      params.MachineDetection = "DetectMessageEnd";
+      params.AsyncAmd = "true";
+      params.AsyncAmdStatusCallback = statusUrl;
+      params.AsyncAmdStatusCallbackMethod = "POST";
+    }
+    const body = new URLSearchParams(params);
 
     const resp = await fetch(
       `https://api.twilio.com/2010-04-01/Accounts/${twilio.accountSid}/Calls.json`,
