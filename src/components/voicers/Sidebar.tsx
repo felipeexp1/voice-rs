@@ -1,6 +1,7 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Megaphone, Bot, Users, Headphones, BarChart3, Settings, ChevronLeft } from "lucide-react";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+import { LayoutDashboard, Megaphone, Bot, Users, Headphones, BarChart3, Settings, ChevronLeft, LogOut } from "lucide-react";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { activeCalls } from "@/data/mock";
 import logoRS from "@/assets/logo-rocha-silva.png";
@@ -18,6 +19,12 @@ const items = [
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    navigate({ to: "/login" });
+  }
 
   return (
     <aside
@@ -64,6 +71,13 @@ export function Sidebar() {
       </nav>
 
       <div className="border-t border-sidebar-border p-3">
+        <button
+          onClick={handleLogout}
+          className="mb-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+        >
+          <LogOut className="h-4 w-4" />
+          {!collapsed && "Sair"}
+        </button>
         <button
           onClick={() => setCollapsed((c) => !c)}
           className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
