@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
+import { Route as AppMonitorRouteImport } from './routes/_app.monitor'
 import { Route as AppLeadsRouteImport } from './routes/_app.leads'
 import { Route as AppCampanhasRouteImport } from './routes/_app.campanhas'
 import { Route as AppAgentesRouteImport } from './routes/_app.agentes'
@@ -22,6 +23,11 @@ const AppRoute = AppRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMonitorRoute = AppMonitorRouteImport.update({
+  id: '/monitor',
+  path: '/monitor',
   getParentRoute: () => AppRoute,
 } as any)
 const AppLeadsRoute = AppLeadsRouteImport.update({
@@ -45,11 +51,13 @@ export interface FileRoutesByFullPath {
   '/agentes': typeof AppAgentesRoute
   '/campanhas': typeof AppCampanhasRoute
   '/leads': typeof AppLeadsRoute
+  '/monitor': typeof AppMonitorRoute
 }
 export interface FileRoutesByTo {
   '/agentes': typeof AppAgentesRoute
   '/campanhas': typeof AppCampanhasRoute
   '/leads': typeof AppLeadsRoute
+  '/monitor': typeof AppMonitorRoute
   '/': typeof AppIndexRoute
 }
 export interface FileRoutesById {
@@ -58,19 +66,21 @@ export interface FileRoutesById {
   '/_app/agentes': typeof AppAgentesRoute
   '/_app/campanhas': typeof AppCampanhasRoute
   '/_app/leads': typeof AppLeadsRoute
+  '/_app/monitor': typeof AppMonitorRoute
   '/_app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/agentes' | '/campanhas' | '/leads'
+  fullPaths: '/' | '/agentes' | '/campanhas' | '/leads' | '/monitor'
   fileRoutesByTo: FileRoutesByTo
-  to: '/agentes' | '/campanhas' | '/leads' | '/'
+  to: '/agentes' | '/campanhas' | '/leads' | '/monitor' | '/'
   id:
     | '__root__'
     | '/_app'
     | '/_app/agentes'
     | '/_app/campanhas'
     | '/_app/leads'
+    | '/_app/monitor'
     | '/_app/'
   fileRoutesById: FileRoutesById
 }
@@ -92,6 +102,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/monitor': {
+      id: '/_app/monitor'
+      path: '/monitor'
+      fullPath: '/monitor'
+      preLoaderRoute: typeof AppMonitorRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/leads': {
@@ -122,6 +139,7 @@ interface AppRouteChildren {
   AppAgentesRoute: typeof AppAgentesRoute
   AppCampanhasRoute: typeof AppCampanhasRoute
   AppLeadsRoute: typeof AppLeadsRoute
+  AppMonitorRoute: typeof AppMonitorRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
@@ -129,6 +147,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAgentesRoute: AppAgentesRoute,
   AppCampanhasRoute: AppCampanhasRoute,
   AppLeadsRoute: AppLeadsRoute,
+  AppMonitorRoute: AppMonitorRoute,
   AppIndexRoute: AppIndexRoute,
 }
 
