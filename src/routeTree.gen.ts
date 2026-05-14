@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppCampanhasRouteImport } from './routes/_app.campanhas'
+import { Route as AppAgentesRouteImport } from './routes/_app.agentes'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -27,27 +28,35 @@ const AppCampanhasRoute = AppCampanhasRouteImport.update({
   path: '/campanhas',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAgentesRoute = AppAgentesRouteImport.update({
+  id: '/agentes',
+  path: '/agentes',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/agentes': typeof AppAgentesRoute
   '/campanhas': typeof AppCampanhasRoute
 }
 export interface FileRoutesByTo {
+  '/agentes': typeof AppAgentesRoute
   '/campanhas': typeof AppCampanhasRoute
   '/': typeof AppIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
+  '/_app/agentes': typeof AppAgentesRoute
   '/_app/campanhas': typeof AppCampanhasRoute
   '/_app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/campanhas'
+  fullPaths: '/' | '/agentes' | '/campanhas'
   fileRoutesByTo: FileRoutesByTo
-  to: '/campanhas' | '/'
-  id: '__root__' | '/_app' | '/_app/campanhas' | '/_app/'
+  to: '/agentes' | '/campanhas' | '/'
+  id: '__root__' | '/_app' | '/_app/agentes' | '/_app/campanhas' | '/_app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,15 +86,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCampanhasRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/agentes': {
+      id: '/_app/agentes'
+      path: '/agentes'
+      fullPath: '/agentes'
+      preLoaderRoute: typeof AppAgentesRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppAgentesRoute: typeof AppAgentesRoute
   AppCampanhasRoute: typeof AppCampanhasRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAgentesRoute: AppAgentesRoute,
   AppCampanhasRoute: AppCampanhasRoute,
   AppIndexRoute: AppIndexRoute,
 }
