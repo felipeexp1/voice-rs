@@ -115,8 +115,16 @@ function LeadsPage() {
     });
   }, [leads, search, statusFilter]);
 
+  type LeadInputRow = {
+    nome: string;
+    telefone: string;
+    numero_processo: string | null;
+    polo_ativo: string | null;
+    valor_causa: number | null;
+    classe_processo: string | null;
+  };
   const importMut = useMutation({
-    mutationFn: (rows: Parameters<typeof importLeads>[0]["data"]["leads"]) =>
+    mutationFn: (rows: LeadInputRow[]) =>
       importFn({ data: { leads: rows } }),
     onSuccess: (res) => {
       toast.success(`${res.inserted} leads importados`);
