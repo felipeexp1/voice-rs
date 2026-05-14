@@ -4,7 +4,7 @@ import { Topbar } from "@/components/voicers/Topbar";
 import { Button } from "@/components/ui/button";
 import {
   Phone, Mic, MessageSquare, Cog, Eye, EyeOff, Brain, Headphones,
-  Database, Webhook, Server, Plug, CheckCircle2, AlertCircle, Users,
+  Database, Webhook, Server, Plug, CheckCircle2, AlertCircle, Users, Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -145,6 +145,25 @@ function CategoryHeader({ title, hint }: { title: string; hint?: string }) {
 function Integracoes() {
   return (
     <div>
+      <a
+        href="/VoiceRS-Manual-Conexoes.pdf"
+        download
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mb-4 flex items-center gap-3 rounded-2xl border border-amber/30 bg-gradient-to-r from-amber/10 to-cyan/5 p-4 transition-colors hover:border-amber/60"
+      >
+        <div className="grid h-10 w-10 place-items-center rounded-xl border border-amber/40 bg-amber/15 text-amber">
+          <Download className="h-5 w-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-display text-sm font-semibold">📥 Baixar manual (PDF)</p>
+          <p className="text-xs text-muted-foreground">
+            Guia passo a passo para configurar Twilio, OpenAI, ElevenLabs, Deepgram, WhatsApp e demais conexões.
+          </p>
+        </div>
+        <span className="hidden text-xs font-medium text-amber sm:inline">Baixar →</span>
+      </a>
+
       <CategoryHeader title="Telefonia" hint="ao menos um provedor é necessário" />
       <div className="space-y-3">
         <IntegrationCard icon={Phone} name="Twilio" category="Voz outbound" required status="pending"
