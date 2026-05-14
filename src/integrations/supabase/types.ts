@@ -95,6 +95,57 @@ export type Database = {
         }
         Relationships: []
       }
+      leads: {
+        Row: {
+          attempts: number
+          classe_processo: string | null
+          created_at: string
+          id: string
+          last_call_at: string | null
+          nome: string
+          numero_processo: string | null
+          polo_ativo: string | null
+          resumo_ia: string | null
+          status: string
+          telefone: string
+          updated_at: string
+          user_id: string
+          valor_causa: number | null
+        }
+        Insert: {
+          attempts?: number
+          classe_processo?: string | null
+          created_at?: string
+          id?: string
+          last_call_at?: string | null
+          nome: string
+          numero_processo?: string | null
+          polo_ativo?: string | null
+          resumo_ia?: string | null
+          status?: string
+          telefone: string
+          updated_at?: string
+          user_id: string
+          valor_causa?: number | null
+        }
+        Update: {
+          attempts?: number
+          classe_processo?: string | null
+          created_at?: string
+          id?: string
+          last_call_at?: string | null
+          nome?: string
+          numero_processo?: string | null
+          polo_ativo?: string | null
+          resumo_ia?: string | null
+          status?: string
+          telefone?: string
+          updated_at?: string
+          user_id?: string
+          valor_causa?: number | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
