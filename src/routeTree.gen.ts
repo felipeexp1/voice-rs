@@ -17,8 +17,11 @@ import { Route as AppRelatoriosRouteImport } from './routes/_app.relatorios'
 import { Route as AppMonitorRouteImport } from './routes/_app.monitor'
 import { Route as AppLeadsRouteImport } from './routes/_app.leads'
 import { Route as AppConfiguracoesRouteImport } from './routes/_app.configuracoes'
+import { Route as AppChamadasRouteImport } from './routes/_app.chamadas'
 import { Route as AppCampanhasRouteImport } from './routes/_app.campanhas'
 import { Route as AppAgentesRouteImport } from './routes/_app.agentes'
+import { Route as ApiPublicTwilioVoiceRouteImport } from './routes/api/public/twilio-voice'
+import { Route as ApiPublicTwilioStatusRouteImport } from './routes/api/public/twilio-status'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -59,6 +62,11 @@ const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
   path: '/configuracoes',
   getParentRoute: () => AppRoute,
 } as any)
+const AppChamadasRoute = AppChamadasRouteImport.update({
+  id: '/chamadas',
+  path: '/chamadas',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppCampanhasRoute = AppCampanhasRouteImport.update({
   id: '/campanhas',
   path: '/campanhas',
@@ -69,28 +77,44 @@ const AppAgentesRoute = AppAgentesRouteImport.update({
   path: '/agentes',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiPublicTwilioVoiceRoute = ApiPublicTwilioVoiceRouteImport.update({
+  id: '/api/public/twilio-voice',
+  path: '/api/public/twilio-voice',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicTwilioStatusRoute = ApiPublicTwilioStatusRouteImport.update({
+  id: '/api/public/twilio-status',
+  path: '/api/public/twilio-status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
   '/agentes': typeof AppAgentesRoute
   '/campanhas': typeof AppCampanhasRoute
+  '/chamadas': typeof AppChamadasRoute
   '/configuracoes': typeof AppConfiguracoesRoute
   '/leads': typeof AppLeadsRoute
   '/monitor': typeof AppMonitorRoute
   '/relatorios': typeof AppRelatoriosRoute
   '/usuarios': typeof AppUsuariosRoute
+  '/api/public/twilio-status': typeof ApiPublicTwilioStatusRoute
+  '/api/public/twilio-voice': typeof ApiPublicTwilioVoiceRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/agentes': typeof AppAgentesRoute
   '/campanhas': typeof AppCampanhasRoute
+  '/chamadas': typeof AppChamadasRoute
   '/configuracoes': typeof AppConfiguracoesRoute
   '/leads': typeof AppLeadsRoute
   '/monitor': typeof AppMonitorRoute
   '/relatorios': typeof AppRelatoriosRoute
   '/usuarios': typeof AppUsuariosRoute
   '/': typeof AppIndexRoute
+  '/api/public/twilio-status': typeof ApiPublicTwilioStatusRoute
+  '/api/public/twilio-voice': typeof ApiPublicTwilioVoiceRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -98,12 +122,15 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_app/agentes': typeof AppAgentesRoute
   '/_app/campanhas': typeof AppCampanhasRoute
+  '/_app/chamadas': typeof AppChamadasRoute
   '/_app/configuracoes': typeof AppConfiguracoesRoute
   '/_app/leads': typeof AppLeadsRoute
   '/_app/monitor': typeof AppMonitorRoute
   '/_app/relatorios': typeof AppRelatoriosRoute
   '/_app/usuarios': typeof AppUsuariosRoute
   '/_app/': typeof AppIndexRoute
+  '/api/public/twilio-status': typeof ApiPublicTwilioStatusRoute
+  '/api/public/twilio-voice': typeof ApiPublicTwilioVoiceRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -112,39 +139,50 @@ export interface FileRouteTypes {
     | '/login'
     | '/agentes'
     | '/campanhas'
+    | '/chamadas'
     | '/configuracoes'
     | '/leads'
     | '/monitor'
     | '/relatorios'
     | '/usuarios'
+    | '/api/public/twilio-status'
+    | '/api/public/twilio-voice'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
     | '/agentes'
     | '/campanhas'
+    | '/chamadas'
     | '/configuracoes'
     | '/leads'
     | '/monitor'
     | '/relatorios'
     | '/usuarios'
     | '/'
+    | '/api/public/twilio-status'
+    | '/api/public/twilio-voice'
   id:
     | '__root__'
     | '/_app'
     | '/login'
     | '/_app/agentes'
     | '/_app/campanhas'
+    | '/_app/chamadas'
     | '/_app/configuracoes'
     | '/_app/leads'
     | '/_app/monitor'
     | '/_app/relatorios'
     | '/_app/usuarios'
     | '/_app/'
+    | '/api/public/twilio-status'
+    | '/api/public/twilio-voice'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
+  ApiPublicTwilioStatusRoute: typeof ApiPublicTwilioStatusRoute
+  ApiPublicTwilioVoiceRoute: typeof ApiPublicTwilioVoiceRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -205,6 +243,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConfiguracoesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/chamadas': {
+      id: '/_app/chamadas'
+      path: '/chamadas'
+      fullPath: '/chamadas'
+      preLoaderRoute: typeof AppChamadasRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/campanhas': {
       id: '/_app/campanhas'
       path: '/campanhas'
@@ -219,12 +264,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAgentesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/public/twilio-voice': {
+      id: '/api/public/twilio-voice'
+      path: '/api/public/twilio-voice'
+      fullPath: '/api/public/twilio-voice'
+      preLoaderRoute: typeof ApiPublicTwilioVoiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/twilio-status': {
+      id: '/api/public/twilio-status'
+      path: '/api/public/twilio-status'
+      fullPath: '/api/public/twilio-status'
+      preLoaderRoute: typeof ApiPublicTwilioStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface AppRouteChildren {
   AppAgentesRoute: typeof AppAgentesRoute
   AppCampanhasRoute: typeof AppCampanhasRoute
+  AppChamadasRoute: typeof AppChamadasRoute
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppLeadsRoute: typeof AppLeadsRoute
   AppMonitorRoute: typeof AppMonitorRoute
@@ -236,6 +296,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAgentesRoute: AppAgentesRoute,
   AppCampanhasRoute: AppCampanhasRoute,
+  AppChamadasRoute: AppChamadasRoute,
   AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppLeadsRoute: AppLeadsRoute,
   AppMonitorRoute: AppMonitorRoute,
@@ -249,6 +310,8 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
+  ApiPublicTwilioStatusRoute: ApiPublicTwilioStatusRoute,
+  ApiPublicTwilioVoiceRoute: ApiPublicTwilioVoiceRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

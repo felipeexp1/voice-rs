@@ -8,7 +8,7 @@ import { testIntegration, listIntegrations, saveIntegration } from "@/lib/integr
 import { Topbar } from "@/components/voicers/Topbar";
 import { Button } from "@/components/ui/button";
 import {
-  Phone, Mic, MessageSquare, Cog, Eye, EyeOff, Brain, Headphones,
+  Phone, Mic, MessageSquare, Cog, Eye, EyeOff, Brain, Headphones, Bot,
   Database, Webhook, Server, Plug, CheckCircle2, AlertCircle, Users, Download, Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -107,7 +107,7 @@ function IntegrationCard({
   name: string; category: string; description: string;
   status: Status; required?: boolean;
   children: React.ReactNode;
-  provider?: "twilio" | "vono" | "bridge" | "openai" | "elevenlabs" | "deepgram" | "whatsapp" | "webhook";
+  provider?: "twilio" | "vono" | "bridge" | "openai" | "elevenlabs" | "deepgram" | "whatsapp" | "webhook" | "voice_agent";
   defaults?: Record<string, string>;
 }) {
   const [open, setOpen] = useState(false);
@@ -274,6 +274,53 @@ function Integracoes() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Bridge URL"><Input name="url" placeholder="wss://bridge.voicers.app" /></Field>
             <Field label="Secret token"><Secret name="secret" placeholder="••••••••••••••••" /></Field>
+          </div>
+          <div className="rounded-xl border border-amber/30 bg-amber/5 p-4 text-sm">
+            <p className="mb-2 font-medium text-amber">📌 URL do webhook pra colar no Twilio</p>
+            <code className="block break-all rounded bg-background/80 p-2 font-mono text-xs">
+              {typeof window !== "undefined" ? `${window.location.origin}/api/public/twilio-voice` : "/api/public/twilio-voice"}
+            </code>
+            <p className="mt-2 text-xs text-muted-foreground">
+              No Twilio Console → Phone Numbers → seu número → Voice → "A call comes in" → Webhook (POST). Cole esta URL.
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Precisa também rodar o bridge Node.js separado. Veja <code className="rounded bg-background px-1">/bridge/README.md</code> no código do projeto pra deploy no Fly.io (gratuito, ~5min de setup).
+            </p>
+          </div>
+        </IntegrationCard>
+
+        <IntegrationCard icon={Bot} name="Agente de voz" category="Prompt + voz da IA" required status={Object.keys(d("voice_agent")).length ? "connected" : "pending"} provider="voice_agent" defaults={d("voice_agent")}
+          description="Define a personalidade, o prompt do sistema e a voz que o cliente escuta na ligação.">
+          <div className="grid grid-cols-1 gap-4">
+            <Field label="Prompt do agente" hint="usado como system prompt no OpenAI Realtime">
+              <textarea
+                name="agent_prompt"
+                rows={5}
+                placeholder="Você é a Sofia, atendente da Rocha & Silva. Seja educada, fale em português brasileiro de forma natural e concisa. Confirme o nome do cliente e pergunte como pode ajudar..."
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              />
+            </Field>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label="Voz">
+                <select name="voice" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">
+                  <option value="alloy">alloy (neutra)</option>
+                  <option value="echo">echo (masculina suave)</option>
+                  <option value="shimmer">shimmer (feminina clara)</option>
+                  <option value="nova">nova (feminina jovem)</option>
+                  <option value="ballad">ballad (feminina expressiva)</option>
+                  <option value="coral">coral (feminina calma)</option>
+                  <option value="sage">sage (masculina maduro)</option>
+                  <option value="verse">verse (masculina expressiva)</option>
+                </select>
+              </Field>
+              <Field label="Idioma">
+                <select name="language" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">
+                  <option value="pt-BR">Português (Brasil)</option>
+                  <option value="en-US">English (US)</option>
+                  <option value="es-ES">Español</option>
+                </select>
+              </Field>
+            </div>
           </div>
         </IntegrationCard>
       </div>
