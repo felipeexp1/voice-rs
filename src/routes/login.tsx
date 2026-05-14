@@ -13,8 +13,7 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const router = useRouter();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -22,19 +21,13 @@ function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email, password,
-          options: { emailRedirectTo: `${window.location.origin}/` },
-        });
-        if (error) throw error;
-        toast.success("Conta criada. Verifique seu e-mail para confirmar.");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        await router.invalidate();
-        navigate({ to: "/configuracoes" });
-      }
+      const email = username.includes("@")
+        ? username.toLowerCase()
+        : `${username.toLowerCase()}@voicers.local`;
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw new Error("Login ou senha inválidos.");
+      await router.invalidate();
+      navigate({ to: "/" });
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -52,31 +45,26 @@ function LoginPage() {
             <p className="text-xs text-muted-foreground">Call Center IA</p>
           </div>
         </div>
-        <h2 className="mb-1 font-display text-xl font-semibold">
-          {mode === "signin" ? "Entrar" : "Criar conta"}
-        </h2>
+        <h2 className="mb-1 font-display text-xl font-semibold">Entrar</h2>
         <p className="mb-6 text-sm text-muted-foreground">
-          {mode === "signin" ? "Acesse o painel para gerenciar suas integrações." : "Cadastre-se para começar."}
+          Ferramenta interna. Apenas administradores podem cadastrar usuários.
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <label className="block">
-            <span className="mb-1.5 block text-sm font-medium">E-mail</span>
-            <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
+            <span className="mb-1.5 block text-sm font-medium">Login</span>
+            <input type="text" autoComplete="username" required value={username} onChange={e => setUsername(e.target.value)}
+              placeholder="Admin"
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none" />
           </label>
           <label className="block">
             <span className="mb-1.5 block text-sm font-medium">Senha</span>
-            <input type="password" required minLength={6} value={password} onChange={e => setPassword(e.target.value)}
+            <input type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)}
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none" />
           </label>
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Aguarde…" : mode === "signin" ? "Entrar" : "Criar conta"}
+            {loading ? "Aguarde…" : "Entrar"}
           </Button>
         </form>
-        <button type="button" onClick={() => setMode(m => m === "signin" ? "signup" : "signin")}
-          className="mt-4 w-full text-center text-sm text-muted-foreground hover:text-foreground">
-          {mode === "signin" ? "Não tem conta? Criar uma." : "Já tem conta? Entrar."}
-        </button>
       </div>
     </div>
   );

@@ -1,9 +1,11 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Megaphone, Bot, Users, Headphones, BarChart3, Settings, ChevronLeft, LogOut } from "lucide-react";
-import { useState } from "react";
+import { LayoutDashboard, Megaphone, Bot, Users, Headphones, BarChart3, Settings, ChevronLeft, LogOut, ShieldCheck } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { activeCalls } from "@/data/mock";
+import { isAdmin } from "@/lib/users.functions";
 import logoRS from "@/assets/logo-rocha-silva.png";
 
 const items = [
@@ -18,8 +20,14 @@ const items = [
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const [admin, setAdmin] = useState(false);
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
+  const checkAdmin = useServerFn(isAdmin);
+
+  useEffect(() => {
+    checkAdmin().then((r) => setAdmin(r.admin)).catch(() => setAdmin(false));
+  }, [checkAdmin]);
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -68,6 +76,21 @@ export function Sidebar() {
             </Link>
           );
         })}
+        {admin && (
+          <Link
+            to="/usuarios"
+            className={cn(
+              "group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+              path.startsWith("/usuarios")
+                ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+            )}
+          >
+            {path.startsWith("/usuarios") && <span className="absolute inset-y-2 left-0 w-0.5 rounded-r bg-primary" />}
+            <ShieldCheck className="h-[18px] w-[18px] shrink-0" />
+            {!collapsed && <span className="flex-1">Usuários</span>}
+          </Link>
+        )}
       </nav>
 
       <div className="border-t border-sidebar-border p-3">
