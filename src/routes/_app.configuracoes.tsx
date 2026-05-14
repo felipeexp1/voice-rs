@@ -125,7 +125,7 @@ function IntegrationCard({
     setTesting(true);
     const t = toast.loading(`Testando ${name}…`);
     try {
-      const res = await runTest({ data: { provider: provider as never, values } });
+      const res = await runTest({ data: { provider, values } });
       toast.dismiss(t);
       if (res.ok) {
         toast.success(`${name}: ${res.message}` + (res.latencyMs ? ` (${res.latencyMs}ms)` : ""));
