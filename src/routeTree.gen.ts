@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppUsuariosRouteImport } from './routes/_app.usuarios'
+import { Route as AppTestarAgenteRouteImport } from './routes/_app.testar-agente'
 import { Route as AppRelatoriosRouteImport } from './routes/_app.relatorios'
 import { Route as AppMonitorRouteImport } from './routes/_app.monitor'
 import { Route as AppLeadsRouteImport } from './routes/_app.leads'
@@ -40,6 +41,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppUsuariosRoute = AppUsuariosRouteImport.update({
   id: '/usuarios',
   path: '/usuarios',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppTestarAgenteRoute = AppTestarAgenteRouteImport.update({
+  id: '/testar-agente',
+  path: '/testar-agente',
   getParentRoute: () => AppRoute,
 } as any)
 const AppRelatoriosRoute = AppRelatoriosRouteImport.update({
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/leads': typeof AppLeadsRoute
   '/monitor': typeof AppMonitorRoute
   '/relatorios': typeof AppRelatoriosRoute
+  '/testar-agente': typeof AppTestarAgenteRoute
   '/usuarios': typeof AppUsuariosRoute
   '/api/public/twilio-status': typeof ApiPublicTwilioStatusRoute
   '/api/public/twilio-voice': typeof ApiPublicTwilioVoiceRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/leads': typeof AppLeadsRoute
   '/monitor': typeof AppMonitorRoute
   '/relatorios': typeof AppRelatoriosRoute
+  '/testar-agente': typeof AppTestarAgenteRoute
   '/usuarios': typeof AppUsuariosRoute
   '/': typeof AppIndexRoute
   '/api/public/twilio-status': typeof ApiPublicTwilioStatusRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/_app/leads': typeof AppLeadsRoute
   '/_app/monitor': typeof AppMonitorRoute
   '/_app/relatorios': typeof AppRelatoriosRoute
+  '/_app/testar-agente': typeof AppTestarAgenteRoute
   '/_app/usuarios': typeof AppUsuariosRoute
   '/_app/': typeof AppIndexRoute
   '/api/public/twilio-status': typeof ApiPublicTwilioStatusRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/leads'
     | '/monitor'
     | '/relatorios'
+    | '/testar-agente'
     | '/usuarios'
     | '/api/public/twilio-status'
     | '/api/public/twilio-voice'
@@ -157,6 +167,7 @@ export interface FileRouteTypes {
     | '/leads'
     | '/monitor'
     | '/relatorios'
+    | '/testar-agente'
     | '/usuarios'
     | '/'
     | '/api/public/twilio-status'
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | '/_app/leads'
     | '/_app/monitor'
     | '/_app/relatorios'
+    | '/_app/testar-agente'
     | '/_app/usuarios'
     | '/_app/'
     | '/api/public/twilio-status'
@@ -213,6 +225,13 @@ declare module '@tanstack/react-router' {
       path: '/usuarios'
       fullPath: '/usuarios'
       preLoaderRoute: typeof AppUsuariosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/testar-agente': {
+      id: '/_app/testar-agente'
+      path: '/testar-agente'
+      fullPath: '/testar-agente'
+      preLoaderRoute: typeof AppTestarAgenteRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/relatorios': {
@@ -289,6 +308,7 @@ interface AppRouteChildren {
   AppLeadsRoute: typeof AppLeadsRoute
   AppMonitorRoute: typeof AppMonitorRoute
   AppRelatoriosRoute: typeof AppRelatoriosRoute
+  AppTestarAgenteRoute: typeof AppTestarAgenteRoute
   AppUsuariosRoute: typeof AppUsuariosRoute
   AppIndexRoute: typeof AppIndexRoute
 }
@@ -301,6 +321,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppLeadsRoute: AppLeadsRoute,
   AppMonitorRoute: AppMonitorRoute,
   AppRelatoriosRoute: AppRelatoriosRoute,
+  AppTestarAgenteRoute: AppTestarAgenteRoute,
   AppUsuariosRoute: AppUsuariosRoute,
   AppIndexRoute: AppIndexRoute,
 }
