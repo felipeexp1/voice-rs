@@ -204,59 +204,59 @@ function Integracoes() {
 
       <CategoryHeader title="Telefonia" hint="ao menos um provedor é necessário" />
       <div className="space-y-3">
-        <IntegrationCard icon={Phone} name="Twilio" category="Voz outbound" required status="pending"
+        <IntegrationCard icon={Phone} name="Twilio" category="Voz outbound" required status="pending" provider="twilio"
           description="Provedor primário para originar chamadas e receber callbacks de status.">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Account SID"><Secret placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxx" /></Field>
-            <Field label="Auth Token"><Secret placeholder="••••••••••••••••" /></Field>
-            <Field label="Número de origem" hint="formato E.164"><Input placeholder="+5511404000000" /></Field>
-            <Field label="Webhook de status"><Input placeholder="https://voicers.app/api/public/twilio" /></Field>
+            <Field label="Account SID"><Secret name="accountSid" placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxx" /></Field>
+            <Field label="Auth Token"><Secret name="authToken" placeholder="••••••••••••••••" /></Field>
+            <Field label="Número de origem" hint="formato E.164"><Input name="from" placeholder="+5511404000000" /></Field>
+            <Field label="Webhook de status"><Input name="webhook" placeholder="https://voicers.app/api/public/twilio" /></Field>
           </div>
         </IntegrationCard>
 
-        <IntegrationCard icon={Phone} name="Vono" category="Voz outbound (BR)" status="optional"
+        <IntegrationCard icon={Phone} name="Vono" category="Voz outbound (BR)" status="optional" provider="vono"
           description="Provedor alternativo nacional, usado em fallback ou custos menores em DDDs específicos.">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="API Key"><Secret placeholder="••••••••••••••••" /></Field>
-            <Field label="Número de origem"><Input placeholder="+5511404000001" /></Field>
+            <Field label="API Key"><Secret name="apiKey" placeholder="••••••••••••••••" /></Field>
+            <Field label="Número de origem"><Input name="from" placeholder="+5511404000001" /></Field>
           </div>
         </IntegrationCard>
 
-        <IntegrationCard icon={Server} name="Bridge de mídia" category="Streaming RTP ↔ WebSocket" required status="pending"
+        <IntegrationCard icon={Server} name="Bridge de mídia" category="Streaming RTP ↔ WebSocket" required status="pending" provider="bridge"
           description="Microserviço Node.js que faz a ponte entre o áudio da operadora e a IA em tempo real.">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Bridge URL"><Input placeholder="wss://bridge.voicers.app" /></Field>
-            <Field label="Secret token"><Secret placeholder="••••••••••••••••" /></Field>
+            <Field label="Bridge URL"><Input name="url" placeholder="wss://bridge.voicers.app" /></Field>
+            <Field label="Secret token"><Secret name="secret" placeholder="••••••••••••••••" /></Field>
           </div>
         </IntegrationCard>
       </div>
 
       <CategoryHeader title="Inteligência conversacional" />
       <div className="space-y-3">
-        <IntegrationCard icon={Brain} name="OpenAI" category="LLM — raciocínio" required status="pending"
+        <IntegrationCard icon={Brain} name="OpenAI" category="LLM — raciocínio" required status="pending" provider="openai"
           description="Modelo principal que entende o lead, qualifica e decide próximas ações.">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="API Key"><Secret placeholder="sk-..." /></Field>
+            <Field label="API Key"><Secret name="apiKey" placeholder="sk-..." /></Field>
             <Field label="Modelo padrão">
-              <select className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">
+              <select name="model" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">
                 <option>gpt-4o</option>
                 <option>gpt-4o-mini</option>
                 <option>gpt-4.1</option>
               </select>
             </Field>
             <Field label="Temperatura" hint="0.1 preciso → 0.9 criativo">
-              <input type="range" min="0.1" max="0.9" step="0.05" defaultValue="0.3" className="w-full accent-primary" />
+              <input name="temperature" type="range" min="0.1" max="0.9" step="0.05" defaultValue="0.3" className="w-full accent-primary" />
             </Field>
-            <Field label="Organização (opcional)"><Input placeholder="org-..." /></Field>
+            <Field label="Organização (opcional)"><Input name="org" placeholder="org-..." /></Field>
           </div>
         </IntegrationCard>
 
-        <IntegrationCard icon={Mic} name="ElevenLabs" category="TTS — síntese de voz" required status="pending"
+        <IntegrationCard icon={Mic} name="ElevenLabs" category="TTS — síntese de voz" required status="pending" provider="elevenlabs"
           description="Gera as vozes ultra-realistas dos agentes em pt-BR com baixa latência.">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="API Key global" hint="sobrepõe a do agente se preenchida"><Secret placeholder="••••••••••••••••" /></Field>
+            <Field label="API Key global" hint="sobrepõe a do agente se preenchida"><Secret name="apiKey" placeholder="••••••••••••••••" /></Field>
             <Field label="Modelo">
-              <select className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">
+              <select name="model" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">
                 <option>eleven_multilingual_v2</option>
                 <option>eleven_turbo_v2_5</option>
                 <option>eleven_flash_v2_5</option>
@@ -265,12 +265,12 @@ function Integracoes() {
           </div>
         </IntegrationCard>
 
-        <IntegrationCard icon={Headphones} name="Deepgram" category="STT — transcrição em tempo real" required status="pending"
+        <IntegrationCard icon={Headphones} name="Deepgram" category="STT — transcrição em tempo real" required status="pending" provider="deepgram"
           description="Transcreve a fala do lead em streaming para o LLM responder em <500ms.">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="API Key"><Secret placeholder="••••••••••••••••" /></Field>
+            <Field label="API Key"><Secret name="apiKey" placeholder="••••••••••••••••" /></Field>
             <Field label="Modelo">
-              <select className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">
+              <select name="model" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">
                 <option>nova-2-general</option>
                 <option>nova-2-phonecall</option>
                 <option>whisper-large</option>
@@ -282,13 +282,13 @@ function Integracoes() {
 
       <CategoryHeader title="Mensageria & follow-up" />
       <div className="space-y-3">
-        <IntegrationCard icon={MessageSquare} name="WhatsApp Business (Meta)" category="Disparo pós-qualificação" status="pending"
+        <IntegrationCard icon={MessageSquare} name="WhatsApp Business (Meta)" category="Disparo pós-qualificação" status="pending" provider="whatsapp"
           description="Envia template aprovado automaticamente quando o lead é qualificado.">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label="Token Meta API"><Secret placeholder="EAAxxxxxxxxxxx" /></Field>
-              <Field label="Phone Number ID"><Input placeholder="123456789012345" /></Field>
-              <Field label="Business Account ID"><Input placeholder="098765432109876" /></Field>
-              <Field label="Nome do template"><Input placeholder="prospeccao_juridica" /></Field>
+              <Field label="Token Meta API"><Secret name="token" placeholder="EAAxxxxxxxxxxx" /></Field>
+              <Field label="Phone Number ID"><Input name="phoneId" placeholder="123456789012345" /></Field>
+              <Field label="Business Account ID"><Input name="businessId" placeholder="098765432109876" /></Field>
+              <Field label="Nome do template"><Input name="template" placeholder="prospeccao_juridica" /></Field>
             </div>
             <div className="rounded-xl border border-border bg-background/50 p-4">
               <p className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">Preview do template</p>
@@ -310,11 +310,11 @@ function Integracoes() {
           <p className="text-xs text-muted-foreground">Para gerenciar tabelas e RLS, abra o painel do Cloud.</p>
         </IntegrationCard>
 
-        <IntegrationCard icon={Webhook} name="CRM externo" category="Webhook outbound" status="optional"
+        <IntegrationCard icon={Webhook} name="CRM externo" category="Webhook outbound" status="optional" provider="webhook"
           description="Envia eventos (lead qualificado, chamada concluída, agendamento) para seu CRM.">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Endpoint"><Input placeholder="https://crm.empresa.com/hooks/voicers" /></Field>
-            <Field label="Assinatura HMAC"><Secret placeholder="••••••••••••••••" /></Field>
+            <Field label="Endpoint"><Input name="endpoint" placeholder="https://crm.empresa.com/hooks/voicers" /></Field>
+            <Field label="Assinatura HMAC"><Secret name="hmac" placeholder="••••••••••••••••" /></Field>
           </div>
           <Field label="Eventos">
             <div className="flex flex-wrap gap-2 text-sm">
