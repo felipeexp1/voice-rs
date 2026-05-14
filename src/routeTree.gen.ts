@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppRelatoriosRouteImport } from './routes/_app.relatorios'
@@ -18,6 +19,11 @@ import { Route as AppConfiguracoesRouteImport } from './routes/_app.configuracoe
 import { Route as AppCampanhasRouteImport } from './routes/_app.campanhas'
 import { Route as AppAgentesRouteImport } from './routes/_app.agentes'
 
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
@@ -60,6 +66,7 @@ const AppAgentesRoute = AppAgentesRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/login': typeof LoginRoute
   '/agentes': typeof AppAgentesRoute
   '/campanhas': typeof AppCampanhasRoute
   '/configuracoes': typeof AppConfiguracoesRoute
@@ -68,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/relatorios': typeof AppRelatoriosRoute
 }
 export interface FileRoutesByTo {
+  '/login': typeof LoginRoute
   '/agentes': typeof AppAgentesRoute
   '/campanhas': typeof AppCampanhasRoute
   '/configuracoes': typeof AppConfiguracoesRoute
@@ -79,6 +87,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
+  '/login': typeof LoginRoute
   '/_app/agentes': typeof AppAgentesRoute
   '/_app/campanhas': typeof AppCampanhasRoute
   '/_app/configuracoes': typeof AppConfiguracoesRoute
@@ -91,6 +100,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/login'
     | '/agentes'
     | '/campanhas'
     | '/configuracoes'
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/relatorios'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/login'
     | '/agentes'
     | '/campanhas'
     | '/configuracoes'
@@ -109,6 +120,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_app'
+    | '/login'
     | '/_app/agentes'
     | '/_app/campanhas'
     | '/_app/configuracoes'
@@ -120,10 +132,18 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
+  LoginRoute: typeof LoginRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app': {
       id: '/_app'
       path: ''
@@ -207,7 +227,18 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
+  LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
