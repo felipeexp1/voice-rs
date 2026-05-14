@@ -1,10 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Topbar } from "@/components/voicers/Topbar";
 import { AgentAvatar } from "@/components/voicers/AgentAvatar";
 import { Waveform } from "@/components/voicers/Waveform";
 import { Button } from "@/components/ui/button";
 import { Plus, Play, Pencil, Power, Phone, Cpu, Thermometer } from "lucide-react";
 import { agents } from "@/data/mock";
+import { toast } from "sonner";
+import { useState } from "react";
 
 export const Route = createFileRoute("/_app/agentes")({
   component: Agentes,
@@ -12,15 +14,36 @@ export const Route = createFileRoute("/_app/agentes")({
 });
 
 function Agentes() {
+  const navigate = useNavigate();
+  const [activeMap, setActiveMap] = useState<Record<string, boolean>>(
+    () => Object.fromEntries(agents.map((a) => [a.id, a.isActive])),
+  );
+
+  const goTest = () => navigate({ to: "/testar-agente" });
+  const goEdit = () => navigate({ to: "/configuracoes" });
+  const toggleActive = (id: string, name: string) => {
+    setActiveMap((m) => {
+      const next = { ...m, [id]: !m[id] };
+      toast.success(`${name} ${next[id] ? "ativado" : "desativado"}.`);
+      return next;
+    });
+  };
+
   return (
     <>
       <Topbar
         title="Agentes de voz"
-        subtitle={`${agents.filter(a => a.isActive).length} ativos · ${agents.length} no total`}
-        actions={<Button className="gap-1.5"><Plus className="h-4 w-4" /> Novo agente</Button>}
+        subtitle={`${Object.values(activeMap).filter(Boolean).length} ativos · ${agents.length} no total`}
+        actions={
+          <Button className="gap-1.5" onClick={goEdit}>
+            <Plus className="h-4 w-4" /> Novo agente
+          </Button>
+        }
       />
       <div className="grid grid-cols-1 gap-4 p-8 md:grid-cols-2 xl:grid-cols-3">
-        {agents.map((a) => (
+        {agents.map((a) => {
+          const isActive = activeMap[a.id];
+          return (
           <div key={a.id} className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 transition-all hover:-translate-y-0.5 hover:border-primary/40">
             <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full opacity-20 blur-3xl" style={{ background: a.avatarColor }} />
 
@@ -29,7 +52,7 @@ function Agentes() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <h3 className="font-display text-xl font-semibold">{a.name}</h3>
-                  {a.isActive ? (
+                  {isActive ? (
                     <span className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/15 px-2 py-0.5 text-[10px] font-medium text-success">
                       <span className="pulse-dot h-1 w-1 rounded-full bg-success" /> Ativo
                     </span>
@@ -65,15 +88,26 @@ function Agentes() {
             </div>
 
             <div className="relative mt-5 flex gap-2">
-              <Button variant="outline" size="sm" className="gap-1.5" style={{ color: a.avatarColor, borderColor: `${a.avatarColor}40` }}>
+              <Button variant="outline" size="sm" className="gap-1.5" style={{ color: a.avatarColor, borderColor: `${a.avatarColor}40` }} onClick={goTest}>
                 <Play className="h-3.5 w-3.5" /> Testar voz
                 <Waveform color={a.avatarColor} bars={5} height={14} />
               </Button>
-              <Button variant="outline" size="sm" className="gap-1.5"><Pencil className="h-3.5 w-3.5" /> Editar</Button>
-              <Button variant="ghost" size="icon" className="ml-auto"><Power className="h-4 w-4" /></Button>
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={goEdit}>
+                <Pencil className="h-3.5 w-3.5" /> Editar
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`ml-auto ${isActive ? "text-success" : "text-muted-foreground"}`}
+                onClick={() => toggleActive(a.id, a.name)}
+                aria-label={isActive ? "Desativar agente" : "Ativar agente"}
+              >
+                <Power className="h-4 w-4" />
+              </Button>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </>
   );
