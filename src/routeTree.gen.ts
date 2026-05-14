@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
+import { Route as AppLeadsRouteImport } from './routes/_app.leads'
 import { Route as AppCampanhasRouteImport } from './routes/_app.campanhas'
 import { Route as AppAgentesRouteImport } from './routes/_app.agentes'
 
@@ -21,6 +22,11 @@ const AppRoute = AppRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLeadsRoute = AppLeadsRouteImport.update({
+  id: '/leads',
+  path: '/leads',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCampanhasRoute = AppCampanhasRouteImport.update({
@@ -38,10 +44,12 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/agentes': typeof AppAgentesRoute
   '/campanhas': typeof AppCampanhasRoute
+  '/leads': typeof AppLeadsRoute
 }
 export interface FileRoutesByTo {
   '/agentes': typeof AppAgentesRoute
   '/campanhas': typeof AppCampanhasRoute
+  '/leads': typeof AppLeadsRoute
   '/': typeof AppIndexRoute
 }
 export interface FileRoutesById {
@@ -49,14 +57,21 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/_app/agentes': typeof AppAgentesRoute
   '/_app/campanhas': typeof AppCampanhasRoute
+  '/_app/leads': typeof AppLeadsRoute
   '/_app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/agentes' | '/campanhas'
+  fullPaths: '/' | '/agentes' | '/campanhas' | '/leads'
   fileRoutesByTo: FileRoutesByTo
-  to: '/agentes' | '/campanhas' | '/'
-  id: '__root__' | '/_app' | '/_app/agentes' | '/_app/campanhas' | '/_app/'
+  to: '/agentes' | '/campanhas' | '/leads' | '/'
+  id:
+    | '__root__'
+    | '/_app'
+    | '/_app/agentes'
+    | '/_app/campanhas'
+    | '/_app/leads'
+    | '/_app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -79,6 +94,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/leads': {
+      id: '/_app/leads'
+      path: '/leads'
+      fullPath: '/leads'
+      preLoaderRoute: typeof AppLeadsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/campanhas': {
       id: '/_app/campanhas'
       path: '/campanhas'
@@ -99,12 +121,14 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAgentesRoute: typeof AppAgentesRoute
   AppCampanhasRoute: typeof AppCampanhasRoute
+  AppLeadsRoute: typeof AppLeadsRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppAgentesRoute: AppAgentesRoute,
   AppCampanhasRoute: AppCampanhasRoute,
+  AppLeadsRoute: AppLeadsRoute,
   AppIndexRoute: AppIndexRoute,
 }
 
