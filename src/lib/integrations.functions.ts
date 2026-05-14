@@ -12,6 +12,7 @@ const PayloadSchema = z.object({
     "deepgram",
     "whatsapp",
     "webhook",
+    "voice_agent",
   ]),
   values: z.record(z.string(), z.string()).default({}),
 });
