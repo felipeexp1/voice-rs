@@ -15,6 +15,7 @@ import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppUsuariosRouteImport } from './routes/_app.usuarios'
 import { Route as AppTestarAgenteRouteImport } from './routes/_app.testar-agente'
 import { Route as AppRelatoriosRouteImport } from './routes/_app.relatorios'
+import { Route as AppReaquecimentoRouteImport } from './routes/_app.reaquecimento'
 import { Route as AppMonitorRouteImport } from './routes/_app.monitor'
 import { Route as AppLeadsRouteImport } from './routes/_app.leads'
 import { Route as AppConfiguracoesRouteImport } from './routes/_app.configuracoes'
@@ -51,6 +52,11 @@ const AppTestarAgenteRoute = AppTestarAgenteRouteImport.update({
 const AppRelatoriosRoute = AppRelatoriosRouteImport.update({
   id: '/relatorios',
   path: '/relatorios',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReaquecimentoRoute = AppReaquecimentoRouteImport.update({
+  id: '/reaquecimento',
+  path: '/reaquecimento',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMonitorRoute = AppMonitorRouteImport.update({
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof AppConfiguracoesRoute
   '/leads': typeof AppLeadsRoute
   '/monitor': typeof AppMonitorRoute
+  '/reaquecimento': typeof AppReaquecimentoRoute
   '/relatorios': typeof AppRelatoriosRoute
   '/testar-agente': typeof AppTestarAgenteRoute
   '/usuarios': typeof AppUsuariosRoute
@@ -117,6 +124,7 @@ export interface FileRoutesByTo {
   '/configuracoes': typeof AppConfiguracoesRoute
   '/leads': typeof AppLeadsRoute
   '/monitor': typeof AppMonitorRoute
+  '/reaquecimento': typeof AppReaquecimentoRoute
   '/relatorios': typeof AppRelatoriosRoute
   '/testar-agente': typeof AppTestarAgenteRoute
   '/usuarios': typeof AppUsuariosRoute
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/_app/configuracoes': typeof AppConfiguracoesRoute
   '/_app/leads': typeof AppLeadsRoute
   '/_app/monitor': typeof AppMonitorRoute
+  '/_app/reaquecimento': typeof AppReaquecimentoRoute
   '/_app/relatorios': typeof AppRelatoriosRoute
   '/_app/testar-agente': typeof AppTestarAgenteRoute
   '/_app/usuarios': typeof AppUsuariosRoute
@@ -152,6 +161,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/leads'
     | '/monitor'
+    | '/reaquecimento'
     | '/relatorios'
     | '/testar-agente'
     | '/usuarios'
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/leads'
     | '/monitor'
+    | '/reaquecimento'
     | '/relatorios'
     | '/testar-agente'
     | '/usuarios'
@@ -182,6 +193,7 @@ export interface FileRouteTypes {
     | '/_app/configuracoes'
     | '/_app/leads'
     | '/_app/monitor'
+    | '/_app/reaquecimento'
     | '/_app/relatorios'
     | '/_app/testar-agente'
     | '/_app/usuarios'
@@ -239,6 +251,13 @@ declare module '@tanstack/react-router' {
       path: '/relatorios'
       fullPath: '/relatorios'
       preLoaderRoute: typeof AppRelatoriosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/reaquecimento': {
+      id: '/_app/reaquecimento'
+      path: '/reaquecimento'
+      fullPath: '/reaquecimento'
+      preLoaderRoute: typeof AppReaquecimentoRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/monitor': {
@@ -307,6 +326,7 @@ interface AppRouteChildren {
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppLeadsRoute: typeof AppLeadsRoute
   AppMonitorRoute: typeof AppMonitorRoute
+  AppReaquecimentoRoute: typeof AppReaquecimentoRoute
   AppRelatoriosRoute: typeof AppRelatoriosRoute
   AppTestarAgenteRoute: typeof AppTestarAgenteRoute
   AppUsuariosRoute: typeof AppUsuariosRoute
@@ -320,6 +340,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppLeadsRoute: AppLeadsRoute,
   AppMonitorRoute: AppMonitorRoute,
+  AppReaquecimentoRoute: AppReaquecimentoRoute,
   AppRelatoriosRoute: AppRelatoriosRoute,
   AppTestarAgenteRoute: AppTestarAgenteRoute,
   AppUsuariosRoute: AppUsuariosRoute,
@@ -337,3 +358,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
