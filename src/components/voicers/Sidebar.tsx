@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Megaphone, Bot, Users, Headphones, BarChart3, Settings, ChevronLeft, LogOut, ShieldCheck, Phone, Mic } from "lucide-react";
+import { LayoutDashboard, Megaphone, Bot, Users, Headphones, BarChart3, Settings, ChevronLeft, LogOut, ShieldCheck, Phone, Mic, Flame, Trophy } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +14,8 @@ const items = [
   { to: "/agentes", label: "Agentes", icon: Bot, exact: false, badge: undefined as number | undefined },
   { to: "/testar-agente", label: "Testar agente", icon: Mic, exact: false, badge: undefined as number | undefined },
   { to: "/leads", label: "Leads", icon: Users, exact: false, badge: undefined as number | undefined },
+  { to: "/reaquecimento", label: "Reaquecimento", icon: Flame, exact: false, badge: undefined as number | undefined },
+  { to: "/fechados", label: "Fila de fechados", icon: Trophy, exact: false, badge: undefined as number | undefined },
   { to: "/chamadas", label: "Chamadas", icon: Phone, exact: false, badge: undefined as number | undefined },
   { to: "/monitor", label: "Monitor", icon: Headphones, exact: false, badge: activeCalls.length as number | undefined },
   { to: "/relatorios", label: "Relatórios", icon: BarChart3, exact: false, badge: undefined as number | undefined },
