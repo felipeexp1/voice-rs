@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Topbar } from "@/components/voicers/Topbar";
@@ -87,8 +87,8 @@ function FechadosPage() {
                 const isOpen = open.has(phoneKey);
                 const dupCount = g.duplicates.length;
                 return (
-                  <>
-                    <tr key={phoneKey} className="border-b border-border/60 transition-colors hover:bg-background/40">
+                  <Fragment key={phoneKey}>
+                    <tr className="border-b border-border/60 transition-colors hover:bg-background/40">
                       <td className="px-2 py-3 text-center">
                         {dupCount > 0 ? (
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggle(phoneKey)}>
@@ -122,7 +122,7 @@ function FechadosPage() {
                         </td>
                       </tr>
                     ))}
-                  </>
+                  </Fragment>
                 );
               })}
             </tbody>
