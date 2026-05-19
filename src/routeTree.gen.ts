@@ -18,6 +18,7 @@ import { Route as AppRelatoriosRouteImport } from './routes/_app.relatorios'
 import { Route as AppReaquecimentoRouteImport } from './routes/_app.reaquecimento'
 import { Route as AppMonitorRouteImport } from './routes/_app.monitor'
 import { Route as AppLeadsRouteImport } from './routes/_app.leads'
+import { Route as AppFechadosRouteImport } from './routes/_app.fechados'
 import { Route as AppConfiguracoesRouteImport } from './routes/_app.configuracoes'
 import { Route as AppChamadasRouteImport } from './routes/_app.chamadas'
 import { Route as AppCampanhasRouteImport } from './routes/_app.campanhas'
@@ -69,6 +70,11 @@ const AppLeadsRoute = AppLeadsRouteImport.update({
   path: '/leads',
   getParentRoute: () => AppRoute,
 } as any)
+const AppFechadosRoute = AppFechadosRouteImport.update({
+  id: '/fechados',
+  path: '/fechados',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
   id: '/configuracoes',
   path: '/configuracoes',
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/campanhas': typeof AppCampanhasRoute
   '/chamadas': typeof AppChamadasRoute
   '/configuracoes': typeof AppConfiguracoesRoute
+  '/fechados': typeof AppFechadosRoute
   '/leads': typeof AppLeadsRoute
   '/monitor': typeof AppMonitorRoute
   '/reaquecimento': typeof AppReaquecimentoRoute
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/campanhas': typeof AppCampanhasRoute
   '/chamadas': typeof AppChamadasRoute
   '/configuracoes': typeof AppConfiguracoesRoute
+  '/fechados': typeof AppFechadosRoute
   '/leads': typeof AppLeadsRoute
   '/monitor': typeof AppMonitorRoute
   '/reaquecimento': typeof AppReaquecimentoRoute
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/_app/campanhas': typeof AppCampanhasRoute
   '/_app/chamadas': typeof AppChamadasRoute
   '/_app/configuracoes': typeof AppConfiguracoesRoute
+  '/_app/fechados': typeof AppFechadosRoute
   '/_app/leads': typeof AppLeadsRoute
   '/_app/monitor': typeof AppMonitorRoute
   '/_app/reaquecimento': typeof AppReaquecimentoRoute
@@ -159,6 +168,7 @@ export interface FileRouteTypes {
     | '/campanhas'
     | '/chamadas'
     | '/configuracoes'
+    | '/fechados'
     | '/leads'
     | '/monitor'
     | '/reaquecimento'
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
     | '/campanhas'
     | '/chamadas'
     | '/configuracoes'
+    | '/fechados'
     | '/leads'
     | '/monitor'
     | '/reaquecimento'
@@ -191,6 +202,7 @@ export interface FileRouteTypes {
     | '/_app/campanhas'
     | '/_app/chamadas'
     | '/_app/configuracoes'
+    | '/_app/fechados'
     | '/_app/leads'
     | '/_app/monitor'
     | '/_app/reaquecimento'
@@ -274,6 +286,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLeadsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/fechados': {
+      id: '/_app/fechados'
+      path: '/fechados'
+      fullPath: '/fechados'
+      preLoaderRoute: typeof AppFechadosRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/configuracoes': {
       id: '/_app/configuracoes'
       path: '/configuracoes'
@@ -324,6 +343,7 @@ interface AppRouteChildren {
   AppCampanhasRoute: typeof AppCampanhasRoute
   AppChamadasRoute: typeof AppChamadasRoute
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
+  AppFechadosRoute: typeof AppFechadosRoute
   AppLeadsRoute: typeof AppLeadsRoute
   AppMonitorRoute: typeof AppMonitorRoute
   AppReaquecimentoRoute: typeof AppReaquecimentoRoute
@@ -338,6 +358,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCampanhasRoute: AppCampanhasRoute,
   AppChamadasRoute: AppChamadasRoute,
   AppConfiguracoesRoute: AppConfiguracoesRoute,
+  AppFechadosRoute: AppFechadosRoute,
   AppLeadsRoute: AppLeadsRoute,
   AppMonitorRoute: AppMonitorRoute,
   AppReaquecimentoRoute: AppReaquecimentoRoute,
